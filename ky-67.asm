@@ -6,8 +6,8 @@
 ; 
 ; on Saturday, 31 of December 2016 at 07:20 PM
 ; 
-; 8000h - 807fh looks like RAM on the NSC810 (128 bytes)
-; 8080h - 8099h looks like hardware IO
+; 8000h - 807fh NSC810 RAM (128 bytes)
+; 8080h - 8099h NSC810 registers (IO and timers)
 ;
 ; 8000 series addresses used
 ; 8000h		
@@ -51,24 +51,24 @@
 ; 802ah
 ; 802bh
 ; 807fh		Stack pointer, can go down to 802ch
-; 8080h		IO port A?  (see NSC810)
-; 8081h		IO port B?
-; 8082h		IO port C?
-; 8084h		DDR A?
-; 8085h		DDR B?
-; 8086h		DDR C?
-; 8087h		mode def?
-; 808ah		port C bit clear?
-; 808eh		port C bit set?
-; 8090h		timer 0 LB?
-; 8091h		timer 0 HB?
-; 8092h		timer 1 LB?
-; 8093h		timer 1 HB?
-; 8095h		start timer 0?
-; 8096h		stop timer 1?
-; 8097h		start timer 1?
-; 8098h		timer 0 mode?
-; 8099h		timer 1 mode?
+; 8080h		IO port A  (see NSC810)
+; 8081h		IO port B
+; 8082h		IO port C
+; 8084h		DDR A
+; 8085h		DDR B
+; 8086h		DDR C
+; 8087h		mode definition
+; 808ah		port C bit clear
+; 808eh		port C bit set
+; 8090h		timer 0 Low Byte
+; 8091h		timer 0 High Byte
+; 8092h		timer 1 Low Byte
+; 8093h		timer 1 High Byte
+; 8095h		start timer 0
+; 8096h		stop timer 1
+; 8097h		start timer 1
+; 8098h		timer 0 mode
+; 8099h		timer 1 mode
 ;
 
 0000 f3        di      						; power-on reset, disable interrupts
@@ -239,18 +239,18 @@
 ; called by 0391, 03bc, 0b42
 0210 f5        push    af					
 0211 3e00      ld      a,00h
-0213 329980    ld      (8099h),a
+0213 329980    ld      (8099h),a			; set timer 1 mode
 0216 3e05      ld      a,05h
-0218 329980    ld      (8099h),a
+0218 329980    ld      (8099h),a			; set timer 1 mode
 021b 3e05      ld      a,05h
-021d 329280    ld      (8092h),a
+021d 329280    ld      (8092h),a			; set timer 1 low byte
 0220 f1        pop     af
 0221 f5        push    af
 0222 3e01      ld      a,01h
 0224 d22902    jp      nc,0229h
 0227 3e02      ld      a,02h
-0229 329380    ld      (8093h),a
-022c 329780    ld      (8097h),a
+0229 329380    ld      (8093h),a			; set timer 1 high byte
+022c 329780    ld      (8097h),a			; start timer 1
 022f f1        pop     af
 0230 c9        ret     
 ;********************************************************************************
@@ -274,7 +274,7 @@
 0254 cd8503    call    0385h				;
 0257 180e      jr      0267h
 0259 3e00      ld      a,00h
-025b 329680    ld      (8096h),a
+025b 329680    ld      (8096h),a			; stop timer 1
 025e 320580    ld      (8005h),a
 0261 320680    ld      (8006h),a
 0264 320480    ld      (8004h),a
@@ -896,9 +896,9 @@
 06f4 fe03      cp      03h
 06f6 cc3102    call    z,0231h				;
 06f9 3ed0      ld      a,0d0h
-06fb 328180    ld      (8081h),a
+06fb 328180    ld      (8081h),a			; write d0h to port B
 06fe 3e00      ld      a,00h
-0700 328180    ld      (8081h),a
+0700 328180    ld      (8081h),a			; write 00h to port B
 0703 f3        di      
 0704 3e0c      ld      a,0ch
 0706 d3bb      out     (0bbh),a
@@ -1232,32 +1232,32 @@
 ;***********************************************************************************
 ; called from 0722
 0925 3e00      ld      a,00h				
-0927 328780    ld      (8087h),a
+0927 328780    ld      (8087h),a			; set port mode definition
 092a 3e00      ld      a,00h
-092c 328480    ld      (8084h),a
+092c 328480    ld      (8084h),a			; set DDR A to all inputs
 092f 3eff      ld      a,0ffh
-0931 328580    ld      (8085h),a
+0931 328580    ld      (8085h),a			; set DDR B to all outputs
 0934 3e00      ld      a,00h
-0936 328180    ld      (8081h),a
+0936 328180    ld      (8081h),a			; write 00h to port B
 0939 3e27      ld      a,27h
-093b 328680    ld      (8086h),a
+093b 328680    ld      (8086h),a			; set DDR C port direction
 093e 3e02      ld      a,02h
-0940 328280    ld      (8082h),a
+0940 328280    ld      (8082h),a			; write 02h to port C
 0943 3e00      ld      a,00h
-0945 329880    ld      (8098h),a
-0948 329980    ld      (8099h),a
+0945 329880    ld      (8098h),a			; set timer 0 mode
+0948 329980    ld      (8099h),a			; set timer 1 mode
 094b 3e05      ld      a,05h
-094d 329880    ld      (8098h),a
-0950 329980    ld      (8099h),a
+094d 329880    ld      (8098h),a			; set timer 0 mode
+0950 329980    ld      (8099h),a			; set timer 1 mode
 0953 3e05      ld      a,05h
-0955 329080    ld      (8090h),a
+0955 329080    ld      (8090h),a			; set timer 0 low byte
 0958 3e0d      ld      a,0dh
-095a 329180    ld      (8091h),a
+095a 329180    ld      (8091h),a			; set timer 0 high byte
 095d 3e0d      ld      a,0dh
-095f 328180    ld      (8081h),a
+095f 328180    ld      (8081h),a			; write 0dh to port B
 0962 3e00      ld      a,00h
-0964 328180    ld      (8081h),a
-0967 329580    ld      (8095h),a
+0964 328180    ld      (8081h),a			; write 00h to port B
+0967 329580    ld      (8095h),a			; start timer 0
 096a c9        ret     
 ;*************************************************************************************
 ; called from 0848
@@ -1456,7 +1456,7 @@
 0b29 cd5606    call    0656h				;
 0b2c 3e00      ld      a,00h
 0b2e 320580    ld      (8005h),a
-0b31 329680    ld      (8096h),a
+0b31 329680    ld      (8096h),a			; stop timer 1
 0b34 1826      jr      0b5ch
 0b36 210480    ld      hl,8004h
 0b39 cb7e      bit     7,(hl)
@@ -1548,15 +1548,15 @@
 0bea 2002      jr      nz,0beeh
 0bec cbe1      set     4,c
 0bee 3e23      ld      a,23h
-0bf0 328680    ld      (8086h),a
+0bf0 328680    ld      (8086h),a			; set DDR C port direction
 0bf3 3e02      ld      a,02h
 0bf5 cdd507    call    07d5h				;
-0bf8 3a8280    ld      a,(8082h)
+0bf8 3a8280    ld      a,(8082h)			; read port C
 0bfb cb57      bit     2,a
 0bfd 2802      jr      z,0c01h
 0bff cbf1      set     6,c
 0c01 3e27      ld      a,27h
-0c03 328680    ld      (8086h),a
+0c03 328680    ld      (8086h),a			; set DDR C port direction
 0c06 79        ld      a,c
 0c07 322680    ld      (8026h),a
 0c0a 3eff      ld      a,0ffh
@@ -1585,9 +1585,9 @@
 0c2a 3e00      ld      a,00h
 0c2c d3bb      out     (0bbh),a
 0c2e 3eff      ld      a,0ffh
-0c30 328580    ld      (8085h),a
+0c30 328580    ld      (8085h),a			; set DDR B to all outputs
 0c33 78        ld      a,b
-0c34 328180    ld      (8081h),a
+0c34 328180    ld      (8081h),a			; write to port B
 0c37 062e      ld      b,2eh
 0c39 10fe      djnz    0c39h
 0c3b 212680    ld      hl,8026h
@@ -1597,8 +1597,8 @@
 0c45 3e04      ld      a,04h
 0c47 d3bb      out     (0bbh),a
 0c49 3e02      ld      a,02h
-0c4b 328a80    ld      (808ah),a
-0c4e 328e80    ld      (808eh),a
+0c4b 328a80    ld      (808ah),a			; bit clear port C
+0c4e 328e80    ld      (808eh),a			; bit set port C
 0c51 019d2a    ld      bc,2a9dh
 0c54 212680    ld      hl,8026h
 0c57 cb6e      bit     5,(hl)
@@ -1627,10 +1627,10 @@
 0c7d 0610      ld      b,10h
 0c7f cd5415    call    1554h				;
 0c82 3e04      ld      a,04h
-0c84 328e80    ld      (808eh),a
+0c84 328e80    ld      (808eh),a			; bit set port C
 0c87 0650      ld      b,50h
 0c89 10fe      djnz    0c89h
-0c8b 328a80    ld      (808ah),a
+0c8b 328a80    ld      (808ah),a			; bit clear port C
 0c8e 0610      ld      b,10h
 0c90 cdb10c    call    0cb1h				;
 0c93 e61f      and     1fh
@@ -1670,17 +1670,17 @@
 0cb2 f5        push    af
 0cb3 f3        di      
 0cb4 3eff      ld      a,0ffh
-0cb6 328580    ld      (8085h),a
+0cb6 328580    ld      (8085h),a			; set DDR B to all outputs
 0cb9 3e00      ld      a,00h
-0cbb 328480    ld      (8084h),a
+0cbb 328480    ld      (8084h),a			; set DDR A to all inputs
 0cbe 78        ld      a,b
-0cbf 328180    ld      (8081h),a
+0cbf 328180    ld      (8081h),a			; write to port B
 0cc2 062e      ld      b,2eh
 0cc4 10fe      djnz    0cc4h
-0cc6 3a8080    ld      a,(8080h)
+0cc6 3a8080    ld      a,(8080h)			; get port A
 0cc9 4f        ld      c,a
 0cca 3e00      ld      a,00h
-0ccc 328180    ld      (8081h),a
+0ccc 328180    ld      (8081h),a			; write 00h to port B
 0ccf fb        ei      
 0cd0 f1        pop     af
 0cd1 79        ld      a,c
@@ -2767,25 +2767,25 @@
 1555 f5        push    af
 1556 f3        di      
 1557 78        ld      a,b
-1558 328180    ld      (8081h),a
+1558 328180    ld      (8081h),a			; write to port B
 155b 3eff      ld      a,0ffh
-155d 328480    ld      (8084h),a
+155d 328480    ld      (8084h),a			; set DDR A to all outputs
 1560 f1        pop     af
 1561 f5        push    af
-1562 328080    ld      (8080h),a
+1562 328080    ld      (8080h),a			; write to port A
 1565 062e      ld      b,2eh
 1567 10fe      djnz    1567h
 1569 3e01      ld      a,01h
-156b 328a80    ld      (808ah),a
+156b 328a80    ld      (808ah),a			; bit clear port C
 156e 062e      ld      b,2eh
 1570 10fe      djnz    1570h
 1572 3e01      ld      a,01h
-1574 328280    ld      (8082h),a
+1574 328280    ld      (8082h),a			; write 01h to port C
 1577 062e      ld      b,2eh
 1579 10fe      djnz    1579h
 157b 3e00      ld      a,00h
-157d 328480    ld      (8084h),a
-1580 328180    ld      (8081h),a
+157d 328480    ld      (8084h),a			; set DDR A to all inputs
+1580 328180    ld      (8081h),a			; write to port B
 1583 fb        ei      
 1584 f1        pop     af
 1585 c1        pop     bc
@@ -2802,10 +2802,10 @@
 1595 0610      ld      b,10h
 1597 cd5415    call    1554h				;
 159a 3e04      ld      a,04h
-159c 328e80    ld      (808eh),a
+159c 328e80    ld      (808eh),a			; bit set port C
 159f 0650      ld      b,50h
 15a1 10fe      djnz    15a1h
-15a3 328a80    ld      (808ah),a
+15a3 328a80    ld      (808ah),a			; bit clear port C
 15a6 3a1480    ld      a,(8014h)
 15a9 0610      ld      b,10h
 15ab cd5415    call    1554h				;
@@ -2863,15 +2863,15 @@
 ; from 1ae8, 1bb5, 1d9f, 20df, 20ed, 2100, 2121, 213b, 229f end of table driven jumps cleanup or escape?
 15fa 5f        ld      e,a					
 15fb 3e00      ld      a,00h
-15fd 328780    ld      (8087h),a
-1600 328480    ld      (8084h),a
-1603 328180    ld      (8081h),a
+15fd 328780    ld      (8087h),a			; set port mode definition
+1600 328480    ld      (8084h),a			; set DDR A to all inputs
+1603 328180    ld      (8081h),a			; write to port B
 1606 3eff      ld      a,0ffh
-1608 328580    ld      (8085h),a
+1608 328580    ld      (8085h),a			; set DDR B to all outputs
 160b 3e03      ld      a,03h
-160d 328280    ld      (8082h),a
+160d 328280    ld      (8082h),a			; write 03h to port C
 1610 3e27      ld      a,27h
-1612 328680    ld      (8086h),a
+1612 328680    ld      (8086h),a			; set DDR C port direction
 1615 cdd403    call    03d4h				;
 1618 0604      ld      b,04h
 161a 3e02      ld      a,02h
@@ -2940,14 +2940,14 @@
 ;******************************************************************************************  
 ; called from 15f7 table
 169e 3e00      ld      a,00h				
-16a0 328780    ld      (8087h),a
-16a3 328480    ld      (8084h),a
-16a6 328180    ld      (8081h),a
+16a0 328780    ld      (8087h),a			; set port mode definition
+16a3 328480    ld      (8084h),a			; set DDR A to all inputs
+16a6 328180    ld      (8081h),a			; write 00h to port B
 16a9 3eff      ld      a,0ffh
-16ab 328580    ld      (8085h),a
-16ae 328280    ld      (8082h),a
+16ab 328580    ld      (8085h),a			; set DDR B to all outputs
+16ae 328280    ld      (8082h),a			; write ffh to port C
 16b1 3e27      ld      a,27h
-16b3 328680    ld      (8086h),a
+16b3 328680    ld      (8086h),a			; set DDR C port direction
 16b6 21d416    ld      hl,16d4h
 16b9 0605      ld      b,05h
 16bb 7e        ld      a,(hl)
@@ -2974,7 +2974,7 @@
 ; called from 1c2d, 1c44, 1c74, 1f20, 1f52, 1f6b, 1f88, 1fad, 1fdb, 2041, 2082, 20a0, 20be
 16e1 f5        push    af					
 16e2 78        ld      a,b
-16e3 328180    ld      (8081h),a
+16e3 328180    ld      (8081h),a			; write to port B
 16e6 f1        pop     af
 16e7 cdd507    call    07d5h				;
 16ea c9        ret     
@@ -2986,21 +2986,21 @@
 16ee 0613      ld      b,13h
 16f0 cdb10c    call    0cb1h				;
 16f3 7a        ld      a,d
-16f4 328180    ld      (8081h),a
+16f4 328180    ld      (8081h),a			; write to port B
 16f7 3e02      ld      a,02h
 16f9 cdd507    call    07d5h				;
 16fc 3e04      ld      a,04h
 16fe d3bb      out     (0bbh),a
 1700 3e02      ld      a,02h
-1702 328a80    ld      (808ah),a
-1705 328e80    ld      (808eh),a
+1702 328a80    ld      (808ah),a			; bit clear port C
+1705 328e80    ld      (808eh),a			; bit set port C
 1708 0640      ld      b,40h
 170a 10fe      djnz    170ah
 170c 0613      ld      b,13h
 170e cdb10c    call    0cb1h				;
 1711 47        ld      b,a
 1712 7a        ld      a,d
-1713 328180    ld      (8081h),a
+1713 328180    ld      (8081h),a			; write to port B
 1716 3e80      ld      a,80h
 1718 d3bb      out     (0bbh),a
 171a 78        ld      a,b
@@ -3031,10 +3031,10 @@
 1731 0610      ld      b,10h
 1733 cd5415    call    1554h				;
 1736 3e04      ld      a,04h
-1738 328e80    ld      (808eh),a
+1738 328e80    ld      (808eh),a			; bit set port C
 173b 0650      ld      b,50h
 173d 10fe      djnz    173dh
-173f 328a80    ld      (808ah),a
+173f 328a80    ld      (808ah),a			; bit clear port C
 1742 0610      ld      b,10h
 1744 79        ld      a,c
 1745 cd5415    call    1554h				;
@@ -3045,11 +3045,11 @@
 ;**************************************************************************************
 ; called from 15df table
 174f 3e04      ld      a,04h				
-1751 328e80    ld      (808eh),a
+1751 328e80    ld      (808eh),a			; bit set port C
 1754 06a0      ld      b,0a0h
 1756 cd5415    call    1554h				;
 1759 3e04      ld      a,04h
-175b 328a80    ld      (808ah),a
+175b 328a80    ld      (808ah),a			; bit clear port C
 175e c9        ret     
 ;*************************************************************************************
 ; called from 168b, 219d
@@ -3164,13 +3164,13 @@
 ;***************************************************************************************
 ; called from 15eb table
 1838 3e00      ld      a,00h				
-183a 328680    ld      (8086h),a
+183a 328680    ld      (8086h),a			; set DDR C port direction
 183d 3e02      ld      a,02h
 183f cdd507    call    07d5h				;
-1842 3a8280    ld      a,(8082h)
+1842 3a8280    ld      a,(8082h)			; write to port C
 1845 47        ld      b,a
 1846 3e27      ld      a,27h
-1848 328680    ld      (8086h),a
+1848 328680    ld      (8086h),a			; set DDR C port direction
 184b 78        ld      a,b
 184c e604      and     04h
 184e ca5918    jp      z,1859h
@@ -3294,34 +3294,34 @@
 1925 217719    ld      hl,1977h				; data at 1977h
 1928 56        ld      d,(hl)
 1929 af        xor     a					; clear a (there is no clear instruction)
-192a 328780    ld      (8087h),a			; 8087h=0
-192d 328180    ld      (8081h),a			; 8081h=0
+192a 328780    ld      (8087h),a			; set port mode definition
+192d 328180    ld      (8081h),a			; write 00h to port B
 1930 3eff      ld      a,0ffh
-1932 328480    ld      (8084h),a			; 8084h=ffh
-1935 328580    ld      (8085h),a			; 8085h=ffh
-1938 328280    ld      (8082h),a			; 8082h=ffh
+1932 328480    ld      (8084h),a			; set DDR A to all outputs
+1935 328580    ld      (8085h),a			; set DDR B to all outputs
+1938 328280    ld      (8082h),a			; write ffh to port C
 193b 3e27      ld      a,27h
-193d 328680    ld      (8086h),a			; 8086h=27h
+193d 328680    ld      (8086h),a			; set DDR C port direction
 1940 79        ld      a,c
-1941 328180    ld      (8081h),a			; 8084h=48h
+1941 328180    ld      (8081h),a			; write 48h to port B
 1944 3e04      ld      a,04h
 1946 3d        dec     a
 1947 c24619    jp      nz,1946h				; short delay loop
 194a 3e01      ld      a,01h
-194c 328a80    ld      (808ah),a			; 808ah=01h
+194c 328a80    ld      (808ah),a			; bit clear port C
 194f 7a        ld      a,d
-1950 328080    ld      (8080h),a			; Send data at 1977 to 8080h, fail message?
+1950 328080    ld      (8080h),a			; Send data at 1977 to port A, fail message?
 1953 3e0a      ld      a,0ah
 1955 3d        dec     a
 1956 c25519    jp      nz,1955h				; short delay loop
 1959 3e01      ld      a,01h
-195b 328e80    ld      (808eh),a			; 808eh=01h
+195b 328e80    ld      (808eh),a			; bit set port C
 195e 3e04      ld      a,04h
 1960 3d        dec     a
 1961 c26019    jp      nz,1960h				; short delay loop
 1964 3e00      ld      a,00h
-1966 328480    ld      (8084h),a			; 8084h=0
-1969 328180    ld      (8081h),a			; 8081h=0
+1966 328480    ld      (8084h),a			; set DDR A to all inputs
+1969 328180    ld      (8081h),a			; write 00h to port B
 196c 0c        inc     c
 196d 23        inc     hl
 196e 10b8      djnz    1928h				; keep looping each time retrieving 1978h, 1979h etc?
@@ -3395,20 +3395,20 @@
 19fa cde51a    call    1ae5h				;
 19fd c3001a    jp      1a00h
 1a00 3e00      ld      a,00h
-1a02 328780    ld      (8087h),a
-1a05 328180    ld      (8081h),a
+1a02 328780    ld      (8087h),a			; set port mode definition
+1a05 328180    ld      (8081h),a			; write 00h to port B
 1a08 3eff      ld      a,0ffh
-1a0a 328580    ld      (8085h),a
+1a0a 328580    ld      (8085h),a			; set DDR B to all outputs
 1a0d 0e01      ld      c,01h
 1a0f 3eff      ld      a,0ffh
-1a11 328480    ld      (8084h),a
+1a11 328480    ld      (8084h),a			; set DDR A to all outputs
 1a14 79        ld      a,c
-1a15 328080    ld      (8080h),a
+1a15 328080    ld      (8080h),a			; write to port A
 1a18 060a      ld      b,0ah
 1a1a 10fe      djnz    1a1ah
 1a1c 3e00      ld      a,00h
-1a1e 328480    ld      (8084h),a
-1a21 3a8080    ld      a,(8080h)
+1a1e 328480    ld      (8084h),a			; set DDR A to all inputs
+1a21 3a8080    ld      a,(8080h)			; read port A
 1a24 b9        cp      c
 1a25 c2321a    jp      nz,1a32h
 1a28 07        rlca    
@@ -3423,14 +3423,14 @@
 1a3b c33e1a    jp      1a3eh
 1a3e 0e01      ld      c,01h
 1a40 3e0f      ld      a,0fh
-1a42 328580    ld      (8085h),a
+1a42 328580    ld      (8085h),a			; set DDR B as inputs and outputs
 1a45 79        ld      a,c
-1a46 328180    ld      (8081h),a
+1a46 328180    ld      (8081h),a			; write to port B
 1a49 060a      ld      b,0ah
 1a4b 10fe      djnz    1a4bh
 1a4d 3e00      ld      a,00h
-1a4f 328580    ld      (8085h),a
-1a52 3a8180    ld      a,(8081h)
+1a4f 328580    ld      (8085h),a			; set DDR B to all inputs
+1a52 3a8180    ld      a,(8081h)			; read port B
 1a55 e60f      and     0fh
 1a57 b9        cp      c
 1a58 c2651a    jp      nz,1a65h
@@ -3445,25 +3445,25 @@
 1a6b cde51a    call    1ae5h				;
 1a6e c3711a    jp      1a71h
 1a71 3e20      ld      a,20h
-1a73 328680    ld      (8086h),a
+1a73 328680    ld      (8086h),a			; set DDR C port direction
 1a76 3e00      ld      a,00h
-1a78 329880    ld      (8098h),a
-1a7b 329980    ld      (8099h),a
+1a78 329880    ld      (8098h),a			; set timer 0 mode
+1a7b 329980    ld      (8099h),a			; set timer 1 mode
 1a7e 3e05      ld      a,05h
-1a80 329880    ld      (8098h),a
-1a83 329980    ld      (8099h),a
+1a80 329880    ld      (8098h),a			; set timer 0 mode
+1a83 329980    ld      (8099h),a			; set timer 1 mode
 1a86 3e05      ld      a,05h
-1a88 329080    ld      (8090h),a
-1a8b 329280    ld      (8092h),a
+1a88 329080    ld      (8090h),a			; set timer 0 low byte
+1a8b 329280    ld      (8092h),a			; set timer 1 low byte
 1a8e 3e0d      ld      a,0dh
-1a90 329180    ld      (8091h),a
-1a93 329380    ld      (8093h),a
+1a90 329180    ld      (8091h),a			; set timer 0 high byte
+1a93 329380    ld      (8093h),a			; set timer 1 low byte
 1a96 06ff      ld      b,0ffh
-1a98 329580    ld      (8095h),a
+1a98 329580    ld      (8095h),a			; start timer 0
 1a9b 10fe      djnz    1a9bh
-1a9d 3a9080    ld      a,(8090h)
+1a9d 3a9080    ld      a,(8090h)			; read timer 0 low byte
 1aa0 4f        ld      c,a
-1aa1 3a9180    ld      a,(8091h)
+1aa1 3a9180    ld      a,(8091h)			; read timer 0 high byte
 1aa4 47        ld      b,a
 1aa5 b7        or      a
 1aa6 c2b41a    jp      nz,1ab4h
@@ -3477,12 +3477,12 @@
 1ab9 cde51a    call    1ae5h				;
 1abc c3bf1a    jp      1abfh
 1abf 06ff      ld      b,0ffh
-1ac1 329780    ld      (8097h),a
+1ac1 329780    ld      (8097h),a			; start timer 1
 1ac4 10fe      djnz    1ac4h
-1ac6 329680    ld      (8096h),a
-1ac9 3a9280    ld      a,(8092h)
+1ac6 329680    ld      (8096h),a			; stop timer 1
+1ac9 3a9280    ld      a,(8092h)			; read timer 1 low byte
 1acc 4f        ld      c,a
-1acd 3a9380    ld      a,(8093h)
+1acd 3a9380    ld      a,(8093h)			; read timer 1 high byte
 1ad0 47        ld      b,a
 1ad1 b7        or      a
 1ad2 c2df1a    jp      nz,1adfh
@@ -3503,13 +3503,13 @@
 ;***************************************************************************
 ; called from 15d9 table
 1aeb 3e00      ld      a,00h					
-1aed 329880    ld      (8098h),a
+1aed 329880    ld      (8098h),a			; set timer 0 mode
 1af0 3eff      ld      a,0ffh
-1af2 328580    ld      (8085h),a
+1af2 328580    ld      (8085h),a			; set DDR B to all outputs
 1af5 3ed0      ld      a,0d0h
-1af7 328180    ld      (8081h),a
+1af7 328180    ld      (8081h),a			; write d0h to port B
 1afa 3e00      ld      a,00h
-1afc 328180    ld      (8081h),a
+1afc 328180    ld      (8081h),a			; write 00h to port B
 1aff 3e08      ld      a,08h
 1b01 d3bb      out     (0bbh),a
 1b03 fd21201b  ld      iy,1b20h
@@ -3517,9 +3517,9 @@
 1b08 00        nop     
 1b09 fd21261b  ld      iy,1b26h
 1b0d 3e80      ld      a,80h
-1b0f 329880    ld      (8098h),a
+1b0f 329880    ld      (8098h),a			; set timer 0 mode
 1b12 3e00      ld      a,00h
-1b14 329880    ld      (8098h),a
+1b14 329880    ld      (8098h),a			; set timer 0 mode
 1b17 0610      ld      b,10h
 1b19 10fe      djnz    1b19h
 1b1b 3e02      ld      a,02h
@@ -3529,9 +3529,9 @@
 1b23 c3391b    jp      1b39h
 1b26 e1        pop     hl
 1b27 3ed0      ld      a,0d0h
-1b29 328180    ld      (8081h),a
+1b29 328180    ld      (8081h),a			; write d0h to port B
 1b2c 3e00      ld      a,00h
-1b2e 328180    ld      (8081h),a
+1b2e 328180    ld      (8081h),a			; write 00h to port B
 1b31 fd21201b  ld      iy,1b20h
 1b35 fb        ei      
 1b36 c3461b    jp      1b46h
@@ -3546,8 +3546,8 @@
 1b47 3e00      ld      a,00h
 1b49 d3bb      out     (0bbh),a
 1b4b 3eff      ld      a,0ffh
-1b4d 328680    ld      (8086h),a
-1b50 328280    ld      (8082h),a
+1b4d 328680    ld      (8086h),a			; set DDR C port direction
+1b50 328280    ld      (8082h),a			; write ffh to port C
 1b53 0613      ld      b,13h
 1b55 cdb10c    call    0cb1h				;
 1b58 3e04      ld      a,04h
@@ -3557,8 +3557,8 @@
 1b61 00        nop     
 1b62 dd217d1b  ld      ix,1b7dh
 1b66 3e02      ld      a,02h
-1b68 328a80    ld      (808ah),a
-1b6b 328e80    ld      (808eh),a
+1b68 328a80    ld      (808ah),a			; bit clear port C
+1b6b 328e80    ld      (808eh),a			; bit set port C
 1b6e 0610      ld      b,10h
 1b70 10fe      djnz    1b70h
 1b72 3e04      ld      a,04h
@@ -3600,9 +3600,9 @@
 1bbb d3bb      out     (0bbh),a
 1bbd dd211f17  ld      ix,171fh
 1bc1 3eff      ld      a,0ffh
-1bc3 328580    ld      (8085h),a
+1bc3 328580    ld      (8085h),a			; set DDR B to all outputs
 1bc6 3e27      ld      a,27h
-1bc8 328680    ld      (8086h),a
+1bc8 328680    ld      (8086h),a			; set DDR C port direction
 1bcb 0625      ld      b,25h
 1bcd 16ff      ld      d,0ffh
 1bcf 1e6b      ld      e,6bh
@@ -3647,9 +3647,9 @@
 1c15 d3bb      out     (0bbh),a
 1c17 dd211f17  ld      ix,171fh
 1c1b 3eff      ld      a,0ffh
-1c1d 328580    ld      (8085h),a
+1c1d 328580    ld      (8085h),a			; set DDR B to all outputs
 1c20 3e27      ld      a,27h
-1c22 328680    ld      (8086h),a
+1c22 328680    ld      (8086h),a			; set DDR C port direction
 1c25 063e      ld      b,3eh
 1c27 16db      ld      d,0dbh
 1c29 1e80      ld      e,80h
@@ -3719,14 +3719,14 @@
 1caa 0611      ld      b,11h
 1cac cd5415    call    1554h				;
 1caf 3e00      ld      a,00h
-1cb1 329880    ld      (8098h),a
+1cb1 329880    ld      (8098h),a			; set timer 0 mode
 1cb4 3e05      ld      a,05h
-1cb6 329880    ld      (8098h),a
+1cb6 329880    ld      (8098h),a			; set timer 0 mode
 1cb9 3e05      ld      a,05h
-1cbb 329080    ld      (8090h),a
+1cbb 329080    ld      (8090h),a			; set timer 0 low byte
 1cbe 3e0d      ld      a,0dh
-1cc0 329180    ld      (8091h),a
-1cc3 329580    ld      (8095h),a
+1cc0 329180    ld      (8091h),a			; set timer 0 high byte
+1cc3 329580    ld      (8095h),a			; start timer 0
 1cc6 cdcc1c    call    1ccch				;
 1cc9 c30e1d    jp      1d0eh
 ;****************************************************************************
@@ -3846,14 +3846,14 @@
 ;*******************************************************************************
 ; called from 15d6 table
 1db9 3e00      ld      a,00h				
-1dbb 328780    ld      (8087h),a
-1dbe 328480    ld      (8084h),a
-1dc1 328180    ld      (8081h),a
+1dbb 328780    ld      (8087h),a			; set port mode definition
+1dbe 328480    ld      (8084h),a			; set DDR A to all inputs
+1dc1 328180    ld      (8081h),a			; write 00h to port B
 1dc4 3eff      ld      a,0ffh
-1dc6 328580    ld      (8085h),a
-1dc9 328280    ld      (8082h),a
+1dc6 328580    ld      (8085h),a			; set DDR B to all outputs
+1dc9 328280    ld      (8082h),a			; write ffh to port C
 1dcc 3e27      ld      a,27h
-1dce 328680    ld      (8086h),a
+1dce 328680    ld      (8086h),a			; set DDR C port direction
 1dd1 0643      ld      b,43h
 1dd3 cdb10c    call    0cb1h				;
 1dd6 cb5f      bit     3,a
