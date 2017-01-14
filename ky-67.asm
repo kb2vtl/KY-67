@@ -1,10 +1,10 @@
-; Disassembly of the file "C:\Documents and Settings\Michael Gottlieb\Desktop\KY-67\ky-67.bin"
+; Disassembly of the file "ky-67.bin"
 ; 
-; CPU Type: Z80
+; CPU Type: Z80 (actual processor NSC800)
 ; 
-; Created with dZ80 2.0
+; Created with dZ80 2.0 then organized, cleaned up and commented by Peter Gottlieb
+; I am releasing my reverse engineering to the public domain in the hope someone finds it useful.
 ; 
-; on Saturday, 31 of December 2016 at 07:20 PM
 ; 
 ; 8000h - 807fh NSC810 RAM (128 bytes)
 ; 8080h - 8099h NSC810 registers (IO and timers)
@@ -51,13 +51,14 @@
 ; 802ah
 ; 802bh
 ; 807fh		Stack pointer, can go down to 802ch
+;
 ; 8080h		IO port A  (see NSC810)
 ; 8081h		IO port B
 ; 8082h		IO port C
 ; 8084h		DDR A
 ; 8085h		DDR B
 ; 8086h		DDR C
-; 8087h		mode definition
+; 8087h		port mode definition
 ; 808ah		port C bit clear
 ; 808eh		port C bit set
 ; 8090h		timer 0 Low Byte
@@ -115,23 +116,23 @@
 012a 321980    ld      (8019h),a
 012d 3e01      ld      a,01h
 012f 0622      ld      b,22h
-0131 cd5415    call    1554h				;
+0131 cd5415    call    1554h				; write out 01h 22h to ports A and B
 0134 3e01      ld      a,01h
 0136 cdd507    call    07d5h				;
 0139 3e00      ld      a,00h
 013b 0622      ld      b,22h
-013d cd5415    call    1554h				;
+013d cd5415    call    1554h				; write out 00h 22h to ports A and B
 0140 218001    ld      hl,0180h
 0143 0600      ld      b,00h
 0145 09        add     hl,bc
 0146 7e        ld      a,(hl)
 0147 0620      ld      b,20h
-0149 cd5415    call    1554h				;
+0149 cd5415    call    1554h				; write out (values from 0180) 20h to ports A and B
 014c 3e01      ld      a,01h
 014e cdd507    call    07d5h				;
 0151 3e00      ld      a,00h
 0153 0620      ld      b,20h
-0155 cd5415    call    1554h				;
+0155 cd5415    call    1554h				; write out 00h 20h to ports A and B
 0158 3a0b80    ld      a,(800bh)
 015b fe58      cp      58h
 015d 0e03      ld      c,03h
@@ -142,7 +143,7 @@
 0167 0e11      ld      c,11h
 0169 79        ld      a,c
 016a 0620      ld      b,20h
-016c cd5415    call    1554h				;
+016c cd5415    call    1554h				; write out xx 20h to ports A and B
 016f c9        ret     
 ;*************************************************************************
 ; data used at 0105
@@ -173,12 +174,12 @@
 01aa cb8a      res     1,d
 01ac 7a        ld      a,d
 01ad 0680      ld      b,80h
-01af cd5415    call    1554h				;
+01af cd5415    call    1554h				; write out xxh 80h to ports A and B
 01b2 3e01      ld      a,01h
 01b4 cdd507    call    07d5h				;
 01b7 7a        ld      a,d
 01b8 e621      and     21h
-01ba cd5415    call    1554h				;
+01ba cd5415    call    1554h				; write out xxh xxh to ports A and B
 01bd c9        ret     
 ;***********************************************************************
 ; where is this called from?
@@ -223,15 +224,15 @@
 01f1 f5        push    af
 01f2 3e0a      ld      a,0ah
 01f4 0648      ld      b,48h
-01f6 cd5415    call    1554h				; 
+01f6 cd5415    call    1554h				; write out 0ah 48h to ports A and B
 01f9 0649      ld      b,49h
-01fb cd5415    call    1554h				;
+01fb cd5415    call    1554h				; write out 0ah 49h to ports A and B
 01fe 064a      ld      b,4ah
-0200 cd5415    call    1554h				;
+0200 cd5415    call    1554h				; write out 0ah 4ah to ports A and B
 0203 064b      ld      b,4bh
-0205 cd5415    call    1554h				;
+0205 cd5415    call    1554h				; write out 0ah 4bh to ports A and B
 0208 064c      ld      b,4ch
-020a cd5415    call    1554h				;
+020a cd5415    call    1554h				; write out 0ah 4ch to ports A and B
 020d f1        pop     af
 020e c1        pop     bc
 020f c9        ret   
@@ -329,7 +330,7 @@
 02cc cba6      res     4,(hl)
 02ce 7e        ld      a,(hl)
 02cf 0613      ld      b,13h
-02d1 cd5415    call    1554h				;
+02d1 cd5415    call    1554h				; write out xxh 13h to ports A and B
 02d4 3e00      ld      a,00h
 02d6 321880    ld      (8018h),a
 02d9 c9        ret     
@@ -337,29 +338,29 @@
 ; called from 0728
 02da 3e00      ld      a,00h				
 02dc 0610      ld      b,10h
-02de cd5415    call    1554h				;
+02de cd5415    call    1554h				; write out 00h 10h to ports A and B
 02e1 3e20      ld      a,20h
 02e3 0611      ld      b,11h
-02e5 cd5415    call    1554h				;
+02e5 cd5415    call    1554h				; write out 20h 11h to ports A and B
 02e8 3e01      ld      a,01h
 02ea cdd507    call    07d5h				;
 02ed 3e21      ld      a,21h
 02ef 0611      ld      b,11h
-02f1 cd5415    call    1554h				;
+02f1 cd5415    call    1554h				; write out 21h 11h to ports A and B
 02f4 3e30      ld      a,30h
 02f6 0612      ld      b,12h
-02f8 cd5415    call    1554h				;
+02f8 cd5415    call    1554h				; write out 30h 12h to ports A and B
 02fb 3e00      ld      a,00h
 02fd 0613      ld      b,13h
-02ff cd5415    call    1554h				;
+02ff cd5415    call    1554h				; write out 00h 13h to ports A and B
 0302 3e34      ld      a,34h
 0304 0680      ld      b,80h
-0306 cd5415    call    1554h				;
+0306 cd5415    call    1554h				; write out 34h 80h to ports A and B
 0309 3e01      ld      a,01h
 030b cdd507    call    07d5h				;
 030e 3e20      ld      a,20h
 0310 0680      ld      b,80h
-0312 cd5415    call    1554h				;
+0312 cd5415    call    1554h				; write out 20h 80h to ports A and B
 0315 0611      ld      b,11h
 0317 cdb10c    call    0cb1h				;
 031a cb6f      bit     5,a
@@ -378,14 +379,14 @@
 0337 18e5      jr      031eh
 0339 3e10      ld      a,10h
 033b 0613      ld      b,13h
-033d cd5415    call    1554h				;
+033d cd5415    call    1554h				; write out 10h 13h to ports A and B
 0340 0611      ld      b,11h
 0342 cdb10c    call    0cb1h				;
 0345 cb6f      bit     5,a
 0347 28f9      jr      z,0342h
 0349 3e00      ld      a,00h
 034b 0613      ld      b,13h
-034d cd5415    call    1554h				;
+034d cd5415    call    1554h				; write out 00h 13h to ports A and B
 0350 3e00      ld      a,00h
 0352 321480    ld      (8014h),a
 0355 3e21      ld      a,21h
@@ -485,7 +486,7 @@
 03e4 7e        ld      a,(hl)
 03e5 e60f      and     0fh
 03e7 f620      or      20h
-03e9 cd5415    call    1554h				;
+03e9 cd5415    call    1554h				; write out xxh xxh to ports A and B
 03ec 23        inc     hl
 03ed 04        inc     b
 03ee 0d        dec     c
@@ -500,7 +501,7 @@
 03f6 f5        push    af
 03f7 3e00      ld      a,00h
 03f9 064d      ld      b,4dh
-03fb cd5415    call    1554h				;
+03fb cd5415    call    1554h				; write out 00h 4dh to ports A and B
 03fe f1        pop     af
 03ff c1        pop     bc
 0400 c9        ret  
@@ -510,7 +511,7 @@
 0402 f5        push    af
 0403 3e20      ld      a,20h
 0405 064d      ld      b,4dh
-0407 cd5415    call    1554h				;
+0407 cd5415    call    1554h				; write out 20h 4dh to ports A and B
 040a f1        pop     af
 040b c1        pop     bc
 040c c9        ret  
@@ -570,7 +571,7 @@
 0485 cb96      res     2,(hl)
 0487 7e        ld      a,(hl)
 0488 0613      ld      b,13h
-048a cd5415    call    1554h				;
+048a cd5415    call    1554h				; write out xxh 13h to ports A and B
 048d c9        ret     
 ;******************************************************************************
 ; called from 11d3, 129b
@@ -706,18 +707,18 @@
 056b e60f      and     0fh
 056d f620      or      20h
 056f 0648      ld      b,48h
-0571 cd5415    call    1554h				;
+0571 cd5415    call    1554h				; write out xxh 48h to ports A and B
 0574 7e        ld      a,(hl)
 0575 e60f      and     0fh
 0577 f620      or      20h
 0579 0649      ld      b,49h
-057b cd5415    call    1554h				;
+057b cd5415    call    1554h				; write out xxh 49h to ports A and B
 057e 23        inc     hl
 057f 7e        ld      a,(hl)
 0580 e60f      and     0fh
 0582 f620      or      20h
 0584 064a      ld      b,4ah
-0586 cd5415    call    1554h				;
+0586 cd5415    call    1554h				; write out xxh 4ah to ports A and B
 0589 23        inc     hl
 058a 7e        ld      a,(hl)
 058b 1f        rra     
@@ -727,12 +728,12 @@
 058f e60f      and     0fh
 0591 f620      or      20h
 0593 064b      ld      b,4bh
-0595 cd5415    call    1554h				;
+0595 cd5415    call    1554h				; write out xxh 4bh to ports A and B
 0598 7e        ld      a,(hl)
 0599 e60f      and     0fh
 059b f620      or      20h
 059d 064c      ld      b,4ch
-059f cd5415    call    1554h				;
+059f cd5415    call    1554h				; write out xxh 4ch to ports A and B
 05a2 f1        pop     af
 05a3 c1        pop     bc
 05a4 e1        pop     hl
@@ -760,7 +761,7 @@
 05c7 09        add     hl,bc
 05c8 7e        ld      a,(hl)
 05c9 06b3      ld      b,0b3h
-05cb cd5415    call    1554h				;
+05cb cd5415    call    1554h				; write out xxh b3h to ports A and B
 05ce c9        ret     
 ;************************************************************************************
 ; data used at 05ab
@@ -930,9 +931,9 @@
 0737 7e        ld      a,(hl)
 0738 cbaf      res     5,a
 073a 0611      ld      b,11h
-073c cd5415    call    1554h				;
+073c cd5415    call    1554h				; write out xxh 11h to ports A and B
 073f cbd7      set     2,a
-0741 cd5415    call    1554h				;
+0741 cd5415    call    1554h				; write out xxh xxh to ports A and B
 0744 77        ld      (hl),a
 0745 210380    ld      hl,8003h
 0748 3e0d      ld      a,0dh
@@ -956,19 +957,19 @@
 0773 cbce      set     1,(hl)
 0775 7e        ld      a,(hl)
 0776 0611      ld      b,11h
-0778 cd5415    call    1554h				;
+0778 cd5415    call    1554h				; write out xxh 11h to ports A and B
 077b 06b1      ld      b,0b1h
-077d cd5415    call    1554h				;
+077d cd5415    call    1554h				; write out xxh b1h to ports A and B
 0780 211580    ld      hl,8015h
 0783 cbde      set     3,(hl)
 0785 7e        ld      a,(hl)
 0786 0611      ld      b,11h
-0788 cd5415    call    1554h				;
+0788 cd5415    call    1554h				; write out xxh 11h to ports A and B
 078b 211780    ld      hl,8017h
 078e cbee      set     5,(hl)
 0790 7e        ld      a,(hl)
 0791 0613      ld      b,13h
-0793 cd5415    call    1554h				;
+0793 cd5415    call    1554h				; write out xxh 13h to ports A and B
 0796 180e      jr      07a6h
 0798 211580    ld      hl,8015h
 079b 7e        ld      a,(hl)
@@ -976,7 +977,7 @@
 079e cbef      set     5,a
 07a0 77        ld      (hl),a
 07a1 0611      ld      b,11h
-07a3 cd5415    call    1554h				;
+07a3 cd5415    call    1554h				; write out xxh 11h to ports A and B
 07a6 c9        ret     
 ;********************************************************************************
 ; called from 135a
@@ -1032,7 +1033,7 @@
 07eb cb96      res     2,(hl)
 07ed 7e        ld      a,(hl)
 07ee 0613      ld      b,13h
-07f0 cd5415    call    1554h				;
+07f0 cd5415    call    1554h				; write out xxh 13h to ports A and B
 07f3 3e00      ld      a,00h
 07f5 320180    ld      (8001h),a
 07f8 3e34      ld      a,34h
@@ -1266,7 +1267,7 @@
 0970 cb96      res     2,(hl)
 0972 7e        ld      a,(hl)
 0973 0613      ld      b,13h
-0975 cd5415    call    1554h				;
+0975 cd5415    call    1554h				; write out xxh 13h to ports A and B
 0978 3e00      ld      a,00h
 097a 320180    ld      (8001h),a
 097d 3e34      ld      a,34h
@@ -1291,7 +1292,7 @@
 09ab cb86      res     0,(hl)
 09ad 7e        ld      a,(hl)
 09ae 0613      ld      b,13h
-09b0 cd5415    call    1554h				;
+09b0 cd5415    call    1554h				; write out xxh 13h to ports A and B
 09b3 c9        ret     
 ;***********************************************************************
 ; called by 1221
@@ -1340,7 +1341,7 @@
 0a07 b1        or      c
 0a08 77        ld      (hl),a
 0a09 0612      ld      b,12h
-0a0b cd5415    call    1554h				;
+0a0b cd5415    call    1554h				; write out xxh 12h to ports A and B
 0a0e 211e80    ld      hl,801eh
 0a11 cb76      bit     6,(hl)
 0a13 280d      jr      z,0a22h
@@ -1348,18 +1349,18 @@
 0a18 cba6      res     4,(hl)
 0a1a 7e        ld      a,(hl)
 0a1b 0612      ld      b,12h
-0a1d cd5415    call    1554h				;
+0a1d cd5415    call    1554h				; write out xxh 12h to ports A and B
 0a20 1816      jr      0a38h
 0a22 211680    ld      hl,8016h
 0a25 cbe6      set     4,(hl)
 0a27 7e        ld      a,(hl)
 0a28 0612      ld      b,12h
-0a2a cd5415    call    1554h				;
+0a2a cd5415    call    1554h				; write out xxh 12h to ports A and B
 0a2d 211480    ld      hl,8014h
 0a30 cbae      res     5,(hl)
 0a32 7e        ld      a,(hl)
 0a33 0610      ld      b,10h
-0a35 cd5415    call    1554h				;
+0a35 cd5415    call    1554h				; write out xxh 10h to ports A and B
 0a38 211e80    ld      hl,801eh
 0a3b cb7e      bit     7,(hl)
 0a3d 2805      jr      z,0a44h
@@ -1372,7 +1373,7 @@
 0a4e cbce      set     1,(hl)
 0a50 7e        ld      a,(hl)
 0a51 0613      ld      b,13h
-0a53 cd5415    call    1554h				;
+0a53 cd5415    call    1554h				; write out xxh 13h to ports A and B
 0a56 212780    ld      hl,8027h
 0a59 cb86      res     0,(hl)
 0a5b 180b      jr      0a68h
@@ -1380,7 +1381,7 @@
 0a60 cb8e      res     1,(hl)
 0a62 7e        ld      a,(hl)
 0a63 0613      ld      b,13h
-0a65 cd5415    call    1554h				;
+0a65 cd5415    call    1554h				; write out xxh 13h to ports A and B
 0a68 c9        ret     
 ;****************************************************************************************
 ; called from 13c9
@@ -1422,7 +1423,7 @@
 0aab 7e        ld      a,(hl)
 0aac 321a80    ld      (801ah),a
 0aaf 0630      ld      b,30h
-0ab1 cd5415    call    1554h				;
+0ab1 cd5415    call    1554h				; write out (801ah) 30h to ports A and B
 0ab4 0623      ld      b,23h
 0ab6 cd5415    call    1554h				;
 0ab9 c9        ret     
@@ -1625,7 +1626,7 @@
 0c78 3a1480    ld      a,(8014h)
 0c7b e6f0      and     0f0h
 0c7d 0610      ld      b,10h
-0c7f cd5415    call    1554h				;
+0c7f cd5415    call    1554h				; write out xxh 10h to ports A and B
 0c82 3e04      ld      a,04h
 0c84 328e80    ld      (808eh),a			; bit set port C
 0c87 0650      ld      b,50h
@@ -1746,7 +1747,7 @@
 0d22 57        ld      d,a
 0d23 e60f      and     0fh
 0d25 0652      ld      b,52h
-0d27 cd5415    call    1554h				;
+0d27 cd5415    call    1554h				; write out xxh 52h to ports A and B
 0d2a 7a        ld      a,d
 0d2b 1f        rra     
 0d2c 1f        rra     
@@ -1754,11 +1755,11 @@
 0d2e 1f        rra     
 0d2f e60f      and     0fh
 0d31 f610      or      10h
-0d33 cd5415    call    1554h				;
+0d33 cd5415    call    1554h				; write out xxh 52h to ports A and B
 0d36 7b        ld      a,e
 0d37 e60f      and     0fh
 0d39 f620      or      20h
-0d3b cd5415    call    1554h				;
+0d3b cd5415    call    1554h				; write out xxh 52h to ports A and B
 0d3e 7b        ld      a,e
 0d3f 1f        rra     
 0d40 1f        rra     
@@ -1766,15 +1767,15 @@
 0d42 1f        rra     
 0d43 e60f      and     0fh
 0d45 f630      or      30h
-0d47 cd5415    call    1554h				;
+0d47 cd5415    call    1554h				; write out xxh 52h to ports A and B
 0d4a 3e40      ld      a,40h
-0d4c cd5415    call    1554h				;
+0d4c cd5415    call    1554h				; write out 40h 52h to ports A and B
 0d4f 3e50      ld      a,50h
-0d51 cd5415    call    1554h				;
+0d51 cd5415    call    1554h				; write out 50h 52h to ports A and B
 0d54 3e60      ld      a,60h
-0d56 cd5415    call    1554h				;
+0d56 cd5415    call    1554h				; write out 60h 52h to ports A and B
 0d59 3e71      ld      a,71h
-0d5b cd5415    call    1554h				;
+0d5b cd5415    call    1554h				; write out 71h 52h to ports A and B
 0d5e c9        ret     
 ;*********************************************************************************************
 ; called from 13c6
@@ -1804,32 +1805,32 @@
 0d8f 321980    ld      (8019h),a
 0d92 3e00      ld      a,00h
 0d94 0631      ld      b,31h
-0d96 cd5415    call    1554h				;
+0d96 cd5415    call    1554h				; write out 00h 31h to ports A and B
 0d99 3e04      ld      a,04h
 0d9b 0622      ld      b,22h
-0d9d cd5415    call    1554h				;
+0d9d cd5415    call    1554h				; write out 04h 22h to ports A and B
 0da0 3e01      ld      a,01h
-0da2 cdd507    call    07d5h				;
+0da2 cdd507    call    07d5h				; write out 01h 22h to ports A and B
 0da5 3e08      ld      a,08h
 0da7 0631      ld      b,31h
-0da9 cd5415    call    1554h				;
+0da9 cd5415    call    1554h				; write out 08h 31h to ports A and B
 0dac 3e00      ld      a,00h
 0dae 0622      ld      b,22h
-0db0 cd5415    call    1554h				;
+0db0 cd5415    call    1554h				; write out 00h 22h to ports A and B
 0db3 7a        ld      a,d
 0db4 0621      ld      b,21h
-0db6 cd5415    call    1554h				;
+0db6 cd5415    call    1554h				; write out d 21h to ports A and B
 0db9 7b        ld      a,e
 0dba 0631      ld      b,31h
-0dbc cd5415    call    1554h				;
+0dbc cd5415    call    1554h				; write out e 21h to ports A and B
 0dbf 3e01      ld      a,01h
 0dc1 cdd507    call    07d5h				;
 0dc4 3e00      ld      a,00h
 0dc6 0621      ld      b,21h
-0dc8 cd5415    call    1554h				;
+0dc8 cd5415    call    1554h				; write out 00h 21h to ports A and B
 0dcb 3e08      ld      a,08h
 0dcd 0631      ld      b,31h
-0dcf cd5415    call    1554h				;
+0dcf cd5415    call    1554h				; write out 08h 31h to ports A and B
 0dd2 c9        ret     
 ;********************************************************************************
 ; called by 1243
@@ -1837,13 +1838,13 @@
 0dd6 f606      or      06h
 0dd8 321580    ld      (8015h),a
 0ddb 0611      ld      b,11h
-0ddd cd5415    call    1554h				;
+0ddd cd5415    call    1554h				; write out (8015h) 11h to ports A and B
 0de0 3e01      ld      a,01h
 0de2 0621      ld      b,21h
-0de4 cd5415    call    1554h				;
+0de4 cd5415    call    1554h				; write out 01h 21h to ports A and B
 0de7 3e08      ld      a,08h
 0de9 0622      ld      b,22h
-0deb cd5415    call    1554h				;
+0deb cd5415    call    1554h				; write out 08h 22h to ports A and B
 0dee 3e1f      ld      a,1fh
 0df0 212a80    ld      hl,802ah
 0df3 cdb513    call    13b5h				;
@@ -1881,7 +1882,7 @@
 0e35 82        add     a,d
 0e36 14        inc     d
 0e37 0623      ld      b,23h
-0e39 cd5415    call    1554h				;
+0e39 cd5415    call    1554h				; write out xxh 23h to ports A and B
 0e3c 0624      ld      b,24h
 0e3e cd280c    call    0c28h				;
 0e41 fe40      cp      40h
@@ -1918,7 +1919,7 @@
 0e79 82        add     a,d
 0e7a 14        inc     d
 0e7b 0623      ld      b,23h
-0e7d cd5415    call    1554h				;
+0e7d cd5415    call    1554h				; write out xxh 23h to ports A and B
 0e80 0624      ld      b,24h
 0e82 cd280c    call    0c28h				;
 0e85 d608      sub     08h
@@ -1982,20 +1983,20 @@
 0eeb cd9408    call    0894h				;
 0eee 3a1a80    ld      a,(801ah)
 0ef1 0623      ld      b,23h
-0ef3 cd5415    call    1554h				;
+0ef3 cd5415    call    1554h				; write out (801ah) 23h to ports A and B
 0ef6 0630      ld      b,30h
-0ef8 cd5415    call    1554h				;
+0ef8 cd5415    call    1554h				; write out (801ah) 30h to ports A and B
 0efb 3e00      ld      a,00h
 0efd 0621      ld      b,21h
-0eff cd5415    call    1554h				;
+0eff cd5415    call    1554h				; write out 00h 21h to ports A and B
 0f02 3e00      ld      a,00h
 0f04 0622      ld      b,22h
-0f06 cd5415    call    1554h				;
+0f06 cd5415    call    1554h				; write out 00h 22h to ports A and B
 0f09 3a1580    ld      a,(8015h)
 0f0c e6f9      and     0f9h
 0f0e 321580    ld      (8015h),a
 0f11 0611      ld      b,11h
-0f13 cd5415    call    1554h				;
+0f13 cd5415    call    1554h				; write out (8015h) 11h to ports A and B
 0f16 c9        ret     
 ;****************************************************************************
 ; called by 083a
@@ -2003,7 +2004,7 @@
 0f1a cb96      res     2,(hl)
 0f1c 7e        ld      a,(hl)
 0f1d 0613      ld      b,13h
-0f1f cd5415    call    1554h				;
+0f1f cd5415    call    1554h				; write out xxh 13h to ports A and B
 0f22 212680    ld      hl,8026h
 0f25 cbbe      res     7,(hl)
 0f27 cd5d0b    call    0b5dh				;
@@ -2014,7 +2015,7 @@
 0f34 cbee      set     5,(hl)
 0f36 7e        ld      a,(hl)
 0f37 0610      ld      b,10h
-0f39 cd5415    call    1554h				;
+0f39 cd5415    call    1554h				; write out xxh 10h to ports A and B
 0f3c 3e01      ld      a,01h
 0f3e 320180    ld      (8001h),a
 0f41 3e0c      ld      a,0ch
@@ -2029,7 +2030,7 @@
 0f57 cbee      set     5,(hl)
 0f59 7e        ld      a,(hl)
 0f5a 0610      ld      b,10h
-0f5c cd5415    call    1554h				;
+0f5c cd5415    call    1554h				; write out xxh 10h to ports A and B
 0f5f 211d80    ld      hl,801dh
 0f62 cb6e      bit     5,(hl)
 0f64 2804      jr      z,0f6ah
@@ -2048,7 +2049,7 @@
 0f83 cbae      res     5,(hl)
 0f85 7e        ld      a,(hl)
 0f86 0610      ld      b,10h
-0f88 cd5415    call    1554h				;
+0f88 cd5415    call    1554h				; write out xxh 10h to ports A and B
 0f8b 212780    ld      hl,8027h
 0f8e cb46      bit     0,(hl)
 0f90 2804      jr      z,0f96h
@@ -2066,11 +2067,11 @@
 0fa2 cbae      res     5,(hl)
 0fa4 7e        ld      a,(hl)
 0fa5 0610      ld      b,10h
-0fa7 cd5415    call    1554h				;
+0fa7 cd5415    call    1554h				; write out xxh 10h to ports A and B
 0faa cbef      set     5,a
-0fac cd5415    call    1554h
+0fac cd5415    call    1554h				; write out xxh 10h to ports A and B
 0faf cbaf      res     5,a
-0fb1 cd5415    call    1554h				;
+0fb1 cd5415    call    1554h				; write out xxh 10h to ports A and B
 0fb4 e1        pop     hl
 0fb5 c1        pop     bc
 0fb6 f1        pop     af
@@ -2081,7 +2082,7 @@
 0fbb cb96      res     2,(hl)
 0fbd 7e        ld      a,(hl)
 0fbe 0613      ld      b,13h
-0fc0 cd5415    call    1554h				;
+0fc0 cd5415    call    1554h				; write out xxh 13h to ports A and B
 0fc3 cd3407    call    0734h				;
 0fc6 3a0280    ld      a,(8002h)
 0fc9 e6f8      and     0f8h
@@ -2209,7 +2210,7 @@
 10df b1        or      c
 10e0 321780    ld      (8017h),a
 10e3 0613      ld      b,13h
-10e5 cd5415    call    1554h				;
+10e5 cd5415    call    1554h				; write out (8017h) 13h to ports A and B
 10e8 c9        ret     
 ;********************************************************************************
 ; called by 11d7, 137d
@@ -2456,7 +2457,7 @@
 12eb cbe6      set     4,(hl)
 12ed 7e        ld      a,(hl)
 12ee 0613      ld      b,13h
-12f0 cd5415    call    1554h				;
+12f0 cd5415    call    1554h				; write out xxh 13h to ports A and B
 12f3 211880    ld      hl,8018h
 12f6 3e10      ld      a,10h
 12f8 cdb513    call    13b5h				;
@@ -2605,7 +2606,7 @@
 141e cb96      res     2,(hl)
 1420 7e        ld      a,(hl)
 1421 0613      ld      b,13h
-1423 cd5415    call    1554h				;
+1423 cd5415    call    1554h				; write out xxh 13h to ports A and B
 1426 212680    ld      hl,8026h
 1429 cbbe      res     7,(hl)
 142b 211f80    ld      hl,801fh
@@ -2675,21 +2676,21 @@
 ; called from 13c3
 14c2 06b0      ld      b,0b0h				
 14c4 3e00      ld      a,00h
-14c6 cd5415    call    1554h				;
+14c6 cd5415    call    1554h				; write out 00h b0h to ports A and B
 14c9 3e10      ld      a,10h
-14cb cd5415    call    1554h				;
+14cb cd5415    call    1554h				; write out 10h b0h to ports A and B
 14ce 3e2b      ld      a,2bh
-14d0 cd5415    call    1554h				;
+14d0 cd5415    call    1554h				; write out 2bh b0h to ports A and B
 14d3 3e36      ld      a,36h
-14d5 cd5415    call    1554h				;
+14d5 cd5415    call    1554h				; write out 36h b0h to ports A and B
 14d8 3e40      ld      a,40h
-14da cd5415    call    1554h				;
+14da cd5415    call    1554h				; write out 40h b0h to ports A and B
 14dd 3e50      ld      a,50h
-14df cd5415    call    1554h				;
+14df cd5415    call    1554h				; write out 50h b0h to ports A and B
 14e2 3e64      ld      a,64h
-14e4 cd5415    call    1554h				;
+14e4 cd5415    call    1554h				; write out 64h b0h to ports A and B
 14e7 3e70      ld      a,70h
-14e9 cd5415    call    1554h				;
+14e9 cd5415    call    1554h				; write out 70h b4h to ports A and B
 14ec c9        ret     
 ;**************************************************************************************
 ; called by 099c, 1027, 1480, 14af
@@ -2697,27 +2698,27 @@
 14f0 cb9e      res     3,(hl)
 14f2 7e        ld      a,(hl)
 14f3 0611      ld      b,11h
-14f5 cd5415    call    1554h				;
+14f5 cd5415    call    1554h				; write out xxh 11h to ports A and B
 14f8 3e01      ld      a,01h
 14fa cdd507    call    07d5h				;
 14fd cb96      res     2,(hl)
 14ff 7e        ld      a,(hl)
-1500 cd5415    call    1554h				;
+1500 cd5415    call    1554h				; write out xxh 11h to ports A and B
 1503 3e01      ld      a,01h
 1505 cdd507    call    07d5h				;
 1508 cb8e      res     1,(hl)
 150a 7e        ld      a,(hl)
-150b cd5415    call    1554h				;
+150b cd5415    call    1554h				; write out xxh 11h to ports A and B
 150e 211780    ld      hl,8017h
 1511 cbae      res     5,(hl)
 1513 7e        ld      a,(hl)
 1514 0613      ld      b,13h
-1516 cd5415    call    1554h				;
+1516 cd5415    call    1554h				; write out xxh 13h to ports A and B
 1519 211580    ld      hl,8015h
 151c cbee      set     5,(hl)
 151e 7e        ld      a,(hl)
 151f 0611      ld      b,11h
-1521 cd5415    call    1554h				;
+1521 cd5415    call    1554h				; write out xxh 11h to ports A and B
 1524 210380    ld      hl,8003h
 1527 3e0d      ld      a,0dh
 1529 cdb513    call    13b5h				;
@@ -2746,7 +2747,7 @@
 1548 f5        push    af
 1549 e60f      and     0fh
 154b f620      or      20h
-154d cd5415    call    1554h				;
+154d cd5415    call    1554h				; write out xxh xxh to ports A and B
 1550 f1        pop     af
 1551 c1        pop     bc
 1552 e1        pop     hl
@@ -2762,31 +2763,34 @@
 ; 14e9, 14f5, 1500, 150b, 1516, 1521, 154d, 1597, 15ab, 15b0, 1733, 1745, 174a, 1756, 17fb, 1802, 
 ; 180c, 1816, 1822, 1831, 1be1, 1bf5, 1c0f, 1c69, 1c99, 1ca5, 1cac, 1ce9, 1cf5, 1d12, 1d31, 1d3d, 
 ; 1d5b, 1d67, 1d8c, 1d98, 1da9, 1db5, 1f9b, 1fa2, 1fee, 1ffa, 2010, 2017, 201e, 2028, 202f, 2070, 
-; 210b, 2145, 2151, 215d, 2304, 232b, 
+; 210b, 2145, 2151, 215d, 2304, 232b, 0fac, 2352
+;
+; writes reg A to port A, reg B to port B, and toggles bit 0 of port C
+;
 1554 c5        push    bc					
 1555 f5        push    af
-1556 f3        di      
+1556 f3        di      						; disable interrupts
 1557 78        ld      a,b
-1558 328180    ld      (8081h),a			; write to port B
+1558 328180    ld      (8081h),a			; write reg B to port B
 155b 3eff      ld      a,0ffh
 155d 328480    ld      (8084h),a			; set DDR A to all outputs
 1560 f1        pop     af
 1561 f5        push    af
-1562 328080    ld      (8080h),a			; write to port A
+1562 328080    ld      (8080h),a			; write reg A to port A
 1565 062e      ld      b,2eh
-1567 10fe      djnz    1567h
+1567 10fe      djnz    1567h				; delay
 1569 3e01      ld      a,01h
-156b 328a80    ld      (808ah),a			; bit clear port C
+156b 328a80    ld      (808ah),a			; bit clear 01h port C
 156e 062e      ld      b,2eh
-1570 10fe      djnz    1570h
+1570 10fe      djnz    1570h				; delay
 1572 3e01      ld      a,01h
 1574 328280    ld      (8082h),a			; write 01h to port C
 1577 062e      ld      b,2eh
-1579 10fe      djnz    1579h
+1579 10fe      djnz    1579h				; delay
 157b 3e00      ld      a,00h
 157d 328480    ld      (8084h),a			; set DDR A to all inputs
-1580 328180    ld      (8081h),a			; write to port B
-1583 fb        ei      
+1580 328180    ld      (8081h),a			; write 00h to port B
+1583 fb        ei      						; enable interrupts
 1584 f1        pop     af
 1585 c1        pop     bc
 1586 c9        ret   
@@ -2800,7 +2804,7 @@
 1590 3a1480    ld      a,(8014h)
 1593 e6f0      and     0f0h
 1595 0610      ld      b,10h
-1597 cd5415    call    1554h				;
+1597 cd5415    call    1554h				; write out xxh 10h to ports A and B
 159a 3e04      ld      a,04h
 159c 328e80    ld      (808eh),a			; bit set port C
 159f 0650      ld      b,50h
@@ -2808,9 +2812,9 @@
 15a3 328a80    ld      (808ah),a			; bit clear port C
 15a6 3a1480    ld      a,(8014h)
 15a9 0610      ld      b,10h
-15ab cd5415    call    1554h				;
+15ab cd5415    call    1554h				; write out (8014h) 10h to ports A and B
 15ae 06a0      ld      b,0a0h
-15b0 cd5415    call    1554h				;
+15b0 cd5415    call    1554h				; write out (8014h) a0h to ports A and B
 15b3 f1        pop     af
 15b4 c1        pop     bc
 15b5 c9        ret     
@@ -3029,7 +3033,7 @@
 ; 22a8, 22b6, 22bd, 22d6, 22dd, 22f6, 22fd, 231d, 2324, 2375, 2294
 1730 c5        push    bc					
 1731 0610      ld      b,10h
-1733 cd5415    call    1554h				;
+1733 cd5415    call    1554h				; write out xxh 10h to ports A and B
 1736 3e04      ld      a,04h
 1738 328e80    ld      (808eh),a			; bit set port C
 173b 0650      ld      b,50h
@@ -3037,9 +3041,9 @@
 173f 328a80    ld      (808ah),a			; bit clear port C
 1742 0610      ld      b,10h
 1744 79        ld      a,c
-1745 cd5415    call    1554h				;
+1745 cd5415    call    1554h				; write out xxh xxh to ports A and B
 1748 06a0      ld      b,0a0h
-174a cd5415    call    1554h				;
+174a cd5415    call    1554h				; write out xxh a0h to ports A and B
 174d c1        pop     bc
 174e c9        ret     
 ;**************************************************************************************
@@ -3047,7 +3051,7 @@
 174f 3e04      ld      a,04h				
 1751 328e80    ld      (808eh),a			; bit set port C
 1754 06a0      ld      b,0a0h
-1756 cd5415    call    1554h				;
+1756 cd5415    call    1554h				; write out 04h a0h to ports A and B
 1759 3e04      ld      a,04h
 175b 328a80    ld      (808ah),a			; bit clear port C
 175e c9        ret     
@@ -3136,29 +3140,29 @@
 ; called from 15dc table
 17f7 3e00      ld      a,00h				
 17f9 0610      ld      b,10h
-17fb cd5415    call    1554h				;
+17fb cd5415    call    1554h				; write out 00h 10h to ports A and B
 17fe 3e21      ld      a,21h
 1800 0611      ld      b,11h
-1802 cd5415    call    1554h				;
+1802 cd5415    call    1554h				; write out 21h 11h to ports A and B
 1805 321580    ld      (8015h),a
 1808 3e30      ld      a,30h
 180a 0612      ld      b,12h
-180c cd5415    call    1554h				;
+180c cd5415    call    1554h				; write out 30h 12h to ports A and B
 180f 321680    ld      (8016h),a
 1812 3e00      ld      a,00h
 1814 0680      ld      b,80h
-1816 cd5415    call    1554h				;
+1816 cd5415    call    1554h				; write out 00h 80h to ports A and B
 1819 3e01      ld      a,01h
 181b cddd01    call    01ddh				;
 181e 3e12      ld      a,12h
 1820 0613      ld      b,13h
-1822 cd5415    call    1554h				;
+1822 cd5415    call    1554h				; write out 12h 13h to ports A and B
 1825 321780    ld      (8017h),a
 1828 3e01      ld      a,01h
 182a cddd01    call    01ddh				;
 182d 3e02      ld      a,02h
 182f 0613      ld      b,13h
-1831 cd5415    call    1554h				;
+1831 cd5415    call    1554h				; write out 02h 13h to ports A and B
 1834 321780    ld      (8017h),a
 1837 c9        ret     
 ;***************************************************************************************
@@ -3613,7 +3617,7 @@
 1bda cd051c    call    1c05h				;
 1bdd 3e11      ld      a,11h
 1bdf 0611      ld      b,11h
-1be1 cd5415    call    1554h				;
+1be1 cd5415    call    1554h				; write out 11h 11h to ports A and B
 1be4 0600      ld      b,00h
 1be6 16ff      ld      d,0ffh
 1be8 1e78      ld      e,78h
@@ -3622,14 +3626,13 @@
 1bf0 57        ld      d,a
 1bf1 3e01      ld      a,01h
 1bf3 0611      ld      b,11h
-1bf5 cd5415    call    1554h				;
+1bf5 cd5415    call    1554h				; write out 01h 11h to ports A and B
 1bf8 3e28      ld      a,28h
 1bfa cd051c    call    1c05h				;
 1bfd c30b1c    jp      1c0bh
 
-1c00 262a      ld      h,2ah				; data
-1c02 262a      ld      h,2ah
-1c04 26
+1c00           db      026h, 02ah, 026h, 02ah, 026h			; data
+
 ;***********************************************************************************************
 ; called by 1bda, 1bfa
 1c05 21        ld      hl,1c00h				
@@ -3639,7 +3642,7 @@
 
 1c0b 3e01      ld      a,01h
 1c0d 0611      ld      b,11h
-1c0f cd5415    call    1554h				;
+1c0f cd5415    call    1554h				; write out 01h 11h to ports A and B
 1c12 c9        ret     
 ;***********************************************************************************************
 ; called from 15e5 table
@@ -3680,7 +3683,7 @@
 1c62 cd8b1c    call    1c8bh				;
 1c65 3e21      ld      a,21h
 1c67 0611      ld      b,11h
-1c69 cd5415    call    1554h				;
+1c69 cd5415    call    1554h				; write out 21h 11h to ports A and B
 1c6c 063f      ld      b,3fh
 1c6e 16d1      ld      d,0d1h
 1c70 1e82      ld      e,82h
@@ -3709,15 +3712,15 @@
 1c93 d3bb      out     (0bbh),a
 1c95 3e14      ld      a,14h
 1c97 0680      ld      b,80h
-1c99 cd5415    call    1554h				;
+1c99 cd5415    call    1554h				; write out 14h 80h to ports A and B
 1c9c 3e01      ld      a,01h
 1c9e cdd507    call    07d5h				;
 1ca1 3e00      ld      a,00h
 1ca3 0680      ld      b,80h
-1ca5 cd5415    call    1554h				;
+1ca5 cd5415    call    1554h				; write out 00h 80h to ports A and B
 1ca8 3e21      ld      a,21h
 1caa 0611      ld      b,11h
-1cac cd5415    call    1554h				;
+1cac cd5415    call    1554h				; write out 21h 11h to ports A and B
 1caf 3e00      ld      a,00h
 1cb1 329880    ld      (8098h),a			; set timer 0 mode
 1cb4 3e05      ld      a,05h
@@ -3745,12 +3748,12 @@
 1ce2 c3a21d    jp      1da2h
 1ce5 3e0d      ld      a,0dh
 1ce7 0680      ld      b,80h
-1ce9 cd5415    call    1554h				;
+1ce9 cd5415    call    1554h				; write out 0dh 80h to ports A and B
 1cec 3e01      ld      a,01h
 1cee cdd507    call    07d5h				;
 1cf1 3e01      ld      a,01h
 1cf3 0680      ld      b,80h
-1cf5 cd5415    call    1554h				;
+1cf5 cd5415    call    1554h				; write out 01h 80h to ports A and B
 1cf8 26ff      ld      h,0ffh
 1cfa 0612      ld      b,12h
 1cfc cdb10c    call    0cb1h				;
@@ -3765,7 +3768,7 @@
 1d0b c3a21d    jp      1da2h
 1d0e 3e00      ld      a,00h
 1d10 0680      ld      b,80h
-1d12 cd5415    call    1554h				;
+1d12 cd5415    call    1554h				; write out 00h 80h to ports A and B
 1d15 216602    ld      hl,0266h
 1d18 0612      ld      b,12h
 1d1a cdb10c    call    0cb1h				;
@@ -3779,12 +3782,12 @@
 1d2a c3a21d    jp      1da2h
 1d2d 3e0b      ld      a,0bh
 1d2f 0680      ld      b,80h
-1d31 cd5415    call    1554h				;
+1d31 cd5415    call    1554h				; write out 0bh 80h to ports A and B
 1d34 3e01      ld      a,01h
 1d36 cdd507    call    07d5h				;
 1d39 3e01      ld      a,01h
 1d3b 0680      ld      b,80h
-1d3d cd5415    call    1554h				;
+1d3d cd5415    call    1554h				; write out 01h 80h to ports A and B
 1d40 3e20      ld      a,20h
 1d42 cdd507    call    07d5h				;
 1d45 0612      ld      b,12h
@@ -3796,12 +3799,12 @@
 1d54 cdcc1c    call    1ccch				;
 1d57 3e10      ld      a,10h
 1d59 0680      ld      b,80h
-1d5b cd5415    call    1554h				;
+1d5b cd5415    call    1554h				; write out 10h 80h to ports A and B
 1d5e 3e01      ld      a,01h
 1d60 cdd507    call    07d5h				;
 1d63 3e00      ld      a,00h
 1d65 0680      ld      b,80h
-1d67 cd5415    call    1554h				;
+1d67 cd5415    call    1554h				; write out 00h 80h to ports A and B
 1d6a 216602    ld      hl,0266h
 1d6d 0612      ld      b,12h
 1d6f cdb10c    call    0cb1h				;
@@ -3822,12 +3825,12 @@
 1d87 f5		   push    af					
 1d88 3e14      ld      a,14h
 1d8a 0680      ld      b,80h
-1d8c cd5415    call    1554h				;
+1d8c cd5415    call    1554h				; write out 14h 80h to ports A and B
 1d8f 3e01      ld      a,01h
 1d91 cdd507    call    07d5h				;
 1d94 3e00      ld      a,00h
 1d96 0680      ld      b,80h
-1d98 cd5415    call    1554h				;
+1d98 cd5415    call    1554h				; write out 00h 80h to ports A and B
 1d9b f1        pop     af
 1d9c 21821d    ld      hl,1d82h
 1d9f c3fa15    jp      15fah
@@ -3835,12 +3838,12 @@
 1da2 cd871d    call    1d87h				;
 1da5 3e14      ld      a,14h
 1da7 0680      ld      b,80h
-1da9 cd5415    call    1554h				;
+1da9 cd5415    call    1554h				; write out 14h 80h to ports A and B
 1dac 3e01      ld      a,01h
 1dae cdd507    call    07d5h				;
 1db1 3e00      ld      a,00h
 1db3 0680      ld      b,80h
-1db5 cd5415    call    1554h				;
+1db5 cd5415    call    1554h				; write out 00h 80h to ports A and B
 1db8 c9        ret     
 
 ;*******************************************************************************
@@ -4081,10 +4084,10 @@
 1f94 cde520    call    20e5h				;
 1f97 3e01      ld      a,01h
 1f99 0621      ld      b,21h
-1f9b cd5415    call    1554h				;
+1f9b cd5415    call    1554h				; write out 01h 21h to ports A and B
 1f9e 3e07      ld      a,07h
 1fa0 0611      ld      b,11h
-1fa2 cd5415    call    1554h				;
+1fa2 cd5415    call    1554h				; write out 07h 11h to ports A and B
 1fa5 06b2      ld      b,0b2h
 1fa7 16ff      ld      d,0ffh
 1fa9 1e19      ld      e,19h
@@ -4117,12 +4120,12 @@
 1fe7 cdf320    call    20f3h				;
 1fea 3e03      ld      a,03h
 1fec 0611      ld      b,11h
-1fee cd5415    call    1554h				;
+1fee cd5415    call    1554h				; write out 03h 11h to ports A and B
 1ff1 3e01      ld      a,01h
 1ff3 cdd507    call    07d5h				;
 1ff6 3e01      ld      a,01h
 1ff8 0611      ld      b,11h
-1ffa cd5415    call    1554h				;
+1ffa cd5415    call    1554h				; write out 01h 11h to ports A and B
 1ffd 3a2680    ld      a,(8026h)
 2000 cb77      bit     6,a
 2002 c22f1f    jp      nz,1f2fh
@@ -4131,20 +4134,20 @@
 2009 cd3017    call    1730h				;
 200c 3e22      ld      a,22h
 200e 0613      ld      b,13h
-2010 cd5415    call    1554h				;
+2010 cd5415    call    1554h				; write out 22h 13h to ports A and B
 2013 3e00      ld      a,00h
 2015 0621      ld      b,21h
-2017 cd5415    call    1554h				;
+2017 cd5415    call    1554h				; write out 00h 21h to ports A and B
 201a 3e07      ld      a,07h
 201c 0611      ld      b,11h
-201e cd5415    call    1554h				;
+201e cd5415    call    1554h				; write out 07h 11h to ports A and B
 2021 3e01      ld      a,01h
 2023 cddd01    call    01ddh				;
 2026 06b1      ld      b,0b1h
-2028 cd5415    call    1554h				;
+2028 cd5415    call    1554h				; write out xxh b1h to ports A and B
 202b 3e0f      ld      a,0fh
 202d 0611      ld      b,11h
-202f cd5415    call    1554h				;
+202f cd5415    call    1554h				; write out 0fh 11h to ports A and B
 2032 3e01      ld      a,01h
 2034 0e03      ld      c,03h
 2036 cd3017    call    1730h				;
@@ -4172,7 +4175,7 @@
 2069 cd4121    call    2141h				;
 206c 3e02      ld      a,02h
 206e 0613      ld      b,13h
-2070 cd5415    call    1554h				;
+2070 cd5415    call    1554h				; write out 02h 13h to ports A and B
 2073 3e01      ld      a,01h
 2075 0e05      ld      c,05h
 2077 cd3017    call    1730h				;
@@ -4260,7 +4263,7 @@
 2106 f5        push    af					
 2107 3e02      ld      a,02h
 2109 0613      ld      b,13h
-210b cd5415    call    1554h				;
+210b cd5415    call    1554h				; write out 02h 13h to ports A and B
 210e cd4121    call    2141h				;
 2111 3e02      ld      a,02h
 2113 0e00      ld      c,00h
@@ -4298,17 +4301,17 @@
 ; called from 20f4, 210e, 2069, 2128
 2141 3e07      ld      a,07h				
 2143 0611      ld      b,11h
-2145 cd5415    call    1554h				;
+2145 cd5415    call    1554h				; write out 07h 11h to ports A and B
 2148 3e01      ld      a,01h
 214a cdd507    call    07d5h				;
 214d 3e03      ld      a,03h
 214f 0611      ld      b,11h
-2151 cd5415    call    1554h				;
+2151 cd5415    call    1554h				; write out 03h 11h to ports A and B
 2154 3e01      ld      a,01h
 2156 cdd507    call    07d5h				;
 2159 3e01      ld      a,01h
 215b 0611      ld      b,11h
-215d cd5415    call    1554h				;
+215d cd5415    call    1554h				; write out 01h 11h to ports A and B
 2160 c9        ret     
 ;*************************************************************************************
 2161 c9        ret     						; from 1f33
@@ -4502,7 +4505,7 @@
 22fd cd3017    call    1730h				;
 2300 3e22      ld      a,22h
 2302 0613      ld      b,13h
-2304 cd5415    call    1554h				;
+2304 cd5415    call    1554h				; write out 22h 13h to ports A and B
 2307 0600      ld      b,00h
 2309 16ff      ld      d,0ffh
 230b 1e80      ld      e,80h
@@ -4519,7 +4522,7 @@
 2324 cd3017    call    1730h				;
 2327 3e02      ld      a,02h
 2329 0613      ld      b,13h
-232b cd5415    call    1554h				;
+232b cd5415    call    1554h				; write out 02h 13h to ports A and B
 232e 0600      ld      b,00h
 2330 1610      ld      d,10h
 2332 1e00      ld      e,00h
@@ -4541,7 +4544,7 @@
 234b cd3017    call    1730h
 234e 3e02      ld      a,02h
 2350 0613      ld      b,13h
-2352 cd5415    call    1554h
+2352 cd5415    call    1554h				; write out 02h 13h to ports A and B
 2355 f1        pop     af
 2356 214123    ld      hl,2341h				; data at 2341
 2359 c3fa15    jp      15fah
