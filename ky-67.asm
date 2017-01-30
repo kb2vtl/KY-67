@@ -19,9 +19,9 @@
 ; 8006h		0261, 0394, 03a3, 03b8, 067d
 ; 8007h		134d, 1360, 1379
 ; 8008h
-; 800bh
-; 800ch
-; 800dh
+; 800bh		10 MHz digit in high nybble, 1 MHz in low nybble
+; 800ch		100 kHz digit in low nybble
+; 800dh		10 kHz digit in high nybble, 1 kHz digit in low nybble
 ; 800eh
 ; 800fh
 ; 8010h		
@@ -95,7 +95,7 @@
 ;*******************************************************************************************
 ; called from 13cc
 0100 0e00      ld      c,00h				
-0102 3a0b80    ld      a,(800bh)			;
+0102 3a0b80    ld      a,(800bh)			; 10 Mhz and 1 MHz
 0105 217001    ld      hl,0170h				; data at 0170
 0108 be        cp      (hl)
 0109 2807      jr      z,0112h
@@ -104,7 +104,7 @@
 010e 23        inc     hl
 010f 0c        inc     c
 0110 18f6      jr      0108h
-0112 3a0c80    ld      a,(800ch)			;
+0112 3a0c80    ld      a,(800ch)			; 100 kHz
 0115 e60f      and     0fh
 0117 23        inc     hl
 0118 be        cp      (hl)
@@ -120,24 +120,24 @@
 012a 321980    ld      (8019h),a
 012d 3e01      ld      a,01h
 012f 0622      ld      b,22h
-0131 cd5415    call    1554h				; write out 01h 22h to ports A and B
+0131 cd5415    call    1554h				; write 01h to I/O addr 22h
 0134 3e01      ld      a,01h
 0136 cdd507    call    07d5h				; delay 180h * a periods
 0139 3e00      ld      a,00h
 013b 0622      ld      b,22h
-013d cd5415    call    1554h				; write out 00h 22h to ports A and B
+013d cd5415    call    1554h				; write 00h to I/O addr 22h
 0140 218001    ld      hl,0180h
 0143 0600      ld      b,00h
 0145 09        add     hl,bc
 0146 7e        ld      a,(hl)
 0147 0620      ld      b,20h
-0149 cd5415    call    1554h				; write out (values from 0180) 20h to ports A and B
+0149 cd5415    call    1554h				; write (values from 0180) to I/O addr 20h
 014c 3e01      ld      a,01h
 014e cdd507    call    07d5h				; delay 180h * a periods
 0151 3e00      ld      a,00h
 0153 0620      ld      b,20h
-0155 cd5415    call    1554h				; write out 00h 20h to ports A and B
-0158 3a0b80    ld      a,(800bh)
+0155 cd5415    call    1554h				; write 00h to I/O addr 20h
+0158 3a0b80    ld      a,(800bh)			; 10 Mhz and 1 MHz
 015b fe58      cp      58h
 015d 0e03      ld      c,03h
 015f 3008      jr      nc,0169h
@@ -147,7 +147,7 @@
 0167 0e11      ld      c,11h
 0169 79        ld      a,c
 016a 0620      ld      b,20h
-016c cd5415    call    1554h				; write out xx 20h to ports A and B
+016c cd5415    call    1554h				; write 11h to I/O addr 20h
 016f c9        ret     
 ;*************************************************************************
 ; data used at 0105
@@ -178,12 +178,12 @@
 01aa cb8a      res     1,d
 01ac 7a        ld      a,d
 01ad 0680      ld      b,80h
-01af cd5415    call    1554h				; write out xxh 80h to ports A and B
+01af cd5415    call    1554h				; write xxh to I/O addr 80h
 01b2 3e01      ld      a,01h
 01b4 cdd507    call    07d5h				; delay 180h * a periods
 01b7 7a        ld      a,d
 01b8 e621      and     21h
-01ba cd5415    call    1554h				; write out xxh xxh to ports A and B
+01ba cd5415    call    1554h				; write xxh to I/O addr 80h
 01bd c9        ret     
 ;***********************************************************************
 ; where is this called from?
@@ -196,7 +196,7 @@
 01c6 212680    ld      hl,8026h
 01c9 cbae      res     5,(hl)
 01cb 0613      ld      b,13h
-01cd cdb10c    call    0cb1h				; write 13h to port B, return with a = port A
+01cd cdb10c    call    0cb1h				; read hardware port 13h to a 
 01d0 320080    ld      (8000h),a
 01d3 f3        di      
 01d4 3e0c      ld      a,0ch
@@ -227,19 +227,22 @@
 01ef c9        ret
 ;******************************************************************************
 ; called from 0725, 16db
+;
+; blank display
+;
 01f0 c5        push    bc					
 01f1 f5        push    af
 01f2 3e0a      ld      a,0ah
 01f4 0648      ld      b,48h
-01f6 cd5415    call    1554h				; write out 0ah 48h to ports A and B
+01f6 cd5415    call    1554h				; write 0ah to I/O addr 48h
 01f9 0649      ld      b,49h
-01fb cd5415    call    1554h				; write out 0ah 49h to ports A and B
+01fb cd5415    call    1554h				; write 0ah to I/O addr 49h
 01fe 064a      ld      b,4ah
-0200 cd5415    call    1554h				; write out 0ah 4ah to ports A and B
+0200 cd5415    call    1554h				; write 0ah to I/O addr 4ah
 0203 064b      ld      b,4bh
-0205 cd5415    call    1554h				; write out 0ah 4bh to ports A and B
+0205 cd5415    call    1554h				; write 0ah to I/O addr 4bh
 0208 064c      ld      b,4ch
-020a cd5415    call    1554h				; write out 0ah 4ch to ports A and B
+020a cd5415    call    1554h				; write 0ah to I/O addr 4ch
 020d f1        pop     af
 020e c1        pop     bc
 020f c9        ret   
@@ -269,14 +272,14 @@
 0237 fe01      cp      01h
 0239 2010      jr      nz,024bh
 023b 0612      ld      b,12h
-023d cdb10c    call    0cb1h				; write 12h to port B, return with a = port A
+023d cdb10c    call    0cb1h				; read hardware port 12h to a 
 0240 cb57      bit     2,a
 0242 2005      jr      nz,0249h
 0244 cd190b    call    0b19h				;
 0247 181e      jr      0267h
 0249 180e      jr      0259h
 024b 0612      ld      b,12h
-024d cdb10c    call    0cb1h				; write 12h to port B, return with a = port A
+024d cdb10c    call    0cb1h				; read hardware port 12h to a
 0250 cb5f      bit     3,a
 0252 2005      jr      nz,0259h
 0254 cd8503    call    0385h				;
@@ -290,14 +293,14 @@
 ;*******************************************************************************
 ; called from 06ec
 0268 0641      ld      b,41h				
-026a cdb10c    call    0cb1h				; write 41h to port B, return with a = port A
+026a cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
 026d cb6f      bit     5,a
 026f 280e      jr      z,027fh
 0271 212680    ld      hl,8026h
 0274 cb5e      bit     3,(hl)
 0276 2013      jr      nz,028bh
 0278 cbde      set     3,(hl)
-027a cd4f05    call    054fh				;
+027a cd4f05    call    054fh				; writes 800b-800d freq data to display
 027d 180c      jr      028bh
 027f 212680    ld      hl,8026h
 0282 cb5e      bit     3,(hl)
@@ -305,20 +308,20 @@
 0286 cb9e      res     3,(hl)
 0288 cdf503    call    03f5h				; write out 00h 4dh to ports A and B - disable display
 028b 0643      ld      b,43h
-028d cdb10c    call    0cb1h				; write 43h to port B, return with a = port A
+028d cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
 0290 cb67      bit     4,a
 0292 200e      jr      nz,02a2h
 0294 212680    ld      hl,8026h
 0297 cb66      bit     4,(hl)
 0299 2013      jr      nz,02aeh
 029b cbe6      set     4,(hl)
-029d cd4f05    call    054fh				;
+029d cd4f05    call    054fh				; writes 800b-800d freq data to display
 02a0 180c      jr      02aeh
 02a2 212680    ld      hl,8026h
 02a5 cb66      bit     4,(hl)
 02a7 2805      jr      z,02aeh
 02a9 cba6      res     4,(hl)
-02ab cd4f05    call    054fh				;
+02ab cd4f05    call    054fh				; writes 800b-800d freq data to display
 02ae 210f80    ld      hl,800fh
 02b1 cb76      bit     6,(hl)
 02b3 2808      jr      z,02bdh
@@ -337,7 +340,7 @@
 02cc cba6      res     4,(hl)
 02ce 7e        ld      a,(hl)
 02cf 0613      ld      b,13h
-02d1 cd5415    call    1554h				; write out xxh 13h to ports A and B
+02d1 cd5415    call    1554h				; write (8017) to I/O addr 13h
 02d4 3e00      ld      a,00h
 02d6 321880    ld      (8018h),a
 02d9 c9        ret     
@@ -345,39 +348,39 @@
 ; called from 0728
 02da 3e00      ld      a,00h				
 02dc 0610      ld      b,10h
-02de cd5415    call    1554h				; write out 00h 10h to ports A and B
+02de cd5415    call    1554h				; write 00h to I/O addr 10h
 02e1 3e20      ld      a,20h
 02e3 0611      ld      b,11h
-02e5 cd5415    call    1554h				; write out 20h 11h to ports A and B
+02e5 cd5415    call    1554h				; write 20h to I/O addr 11h
 02e8 3e01      ld      a,01h
 02ea cdd507    call    07d5h				; delay 180h * a periods
 02ed 3e21      ld      a,21h
 02ef 0611      ld      b,11h
-02f1 cd5415    call    1554h				; write out 21h 11h to ports A and B
+02f1 cd5415    call    1554h				; write 21h to I/O addr 11h
 02f4 3e30      ld      a,30h
 02f6 0612      ld      b,12h
-02f8 cd5415    call    1554h				; write out 30h 12h to ports A and B
+02f8 cd5415    call    1554h				; write 30h to I/O addr 12h
 02fb 3e00      ld      a,00h
 02fd 0613      ld      b,13h
-02ff cd5415    call    1554h				; write out 00h 13h to ports A and B
+02ff cd5415    call    1554h				; write 00h to I/O addr 13h
 0302 3e34      ld      a,34h
 0304 0680      ld      b,80h
-0306 cd5415    call    1554h				; write out 34h 80h to ports A and B
+0306 cd5415    call    1554h				; write 34h to I/O addr 80h
 0309 3e01      ld      a,01h
 030b cdd507    call    07d5h				; delay 180h * a periods
 030e 3e20      ld      a,20h
 0310 0680      ld      b,80h
-0312 cd5415    call    1554h				; write out 20h 80h to ports A and B
+0312 cd5415    call    1554h				; write 20h to I/O addr 80h
 0315 0611      ld      b,11h
-0317 cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+0317 cdb10c    call    0cb1h				; read hardware port 11h to a 
 031a cb6f      bit     5,a
 031c 28f9      jr      z,0317h
 031e 0611      ld      b,11h
-0320 cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+0320 cdb10c    call    0cb1h				; read hardware port 11h to a
 0323 cb6f      bit     5,a
 0325 2812      jr      z,0339h
 0327 0643      ld      b,43h
-0329 cdb10c    call    0cb1h				; write 43h to port B, return with a = port A
+0329 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
 032c e60f      and     0fh
 032e fe06      cp      06h
 0330 2005      jr      nz,0337h
@@ -386,24 +389,24 @@
 0337 18e5      jr      031eh
 0339 3e10      ld      a,10h
 033b 0613      ld      b,13h
-033d cd5415    call    1554h				; write out 10h 13h to ports A and B
+033d cd5415    call    1554h				; write 10h to I/O addr 13h
 0340 0611      ld      b,11h
-0342 cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+0342 cdb10c    call    0cb1h				; read hardware port 11h to a 
 0345 cb6f      bit     5,a
 0347 28f9      jr      z,0342h
 0349 3e00      ld      a,00h
 034b 0613      ld      b,13h
-034d cd5415    call    1554h				; write out 00h 13h to ports A and B
+034d cd5415    call    1554h				; write 00h to I/O addr 13h
 0350 3e00      ld      a,00h
-0352 321480    ld      (8014h),a
+0352 321480    ld      (8014h),a			; 8014=0
 0355 3e21      ld      a,21h
-0357 321580    ld      (8015h),a
+0357 321580    ld      (8015h),a			; 8015=21
 035a 3e30      ld      a,30h
-035c 321680    ld      (8016h),a
+035c 321680    ld      (8016h),a			; 8016=30
 035f 3e00      ld      a,00h
-0361 321780    ld      (8017h),a
+0361 321780    ld      (8017h),a			; 8017=0
 0364 3e34      ld      a,34h
-0366 320280    ld      (8002h),a
+0366 320280    ld      (8002h),a			; 8002=34
 0369 c9        ret     
 ;************************************************************************
 ; called by 11cd, 123b
@@ -488,7 +491,7 @@
 03d5 c5        push    bc
 03d6 f5        push    af
 03d7 0641      ld      b,41h
-03d9 cdb10c    call    0cb1h				; write 41h to port B, return with a = port A
+03d9 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
 03dc cb6f      bit     5,a					; Z is inverse of bit 5 of reg a
 03de 2811      jr      z,03f1h				; bail out if bit 5 of reg a is zero
 03e0 0648      ld      b,48h				; bit 5 is one, b=48
@@ -496,7 +499,7 @@
 03e4 7e        ld      a,(hl)
 03e5 e60f      and     0fh
 03e7 f620      or      20h
-03e9 cd5415    call    1554h				; ; writes a to port A, 48h to port B, and toggles bit 0 of port C
+03e9 cd5415    call    1554h				; writes a to I/O addr 48h
 03ec 23        inc     hl
 03ed 04        inc     b
 03ee 0d        dec     c
@@ -512,7 +515,7 @@
 03f6 f5        push    af
 03f7 3e00      ld      a,00h
 03f9 064d      ld      b,4dh
-03fb cd5415    call    1554h				; write out 00h 4dh to ports A and B
+03fb cd5415    call    1554h				; write 00h to I/O addr 4dh
 03fe f1        pop     af
 03ff c1        pop     bc
 0400 c9        ret  
@@ -523,7 +526,7 @@
 0402 f5        push    af
 0403 3e20      ld      a,20h
 0405 064d      ld      b,4dh
-0407 cd5415    call    1554h				; write out 20h 4dh to ports A and B
+0407 cd5415    call    1554h				; write 20h to I/O addr 4dh
 040a f1        pop     af
 040b c1        pop     bc
 040c c9        ret  
@@ -565,7 +568,7 @@
 0458 2804      jr      z,045eh
 045a cb77      bit     6,a
 045c 281f      jr      z,047dh
-045e cd4f05    call    054fh				;
+045e cd4f05    call    054fh				; writes 800b-800d freq data to display
 0461 3a2680    ld      a,(8026h)
 0464 cb4f      bit     1,a
 0466 2808      jr      z,0470h
@@ -583,7 +586,7 @@
 0485 cb96      res     2,(hl)
 0487 7e        ld      a,(hl)
 0488 0613      ld      b,13h
-048a cd5415    call    1554h				; write out xxh 13h to ports A and B
+048a cd5415    call    1554h				; write a to I/O addr 13h
 048d c9        ret     
 ;******************************************************************************
 ; called from 11d3, 129b
@@ -700,18 +703,21 @@
 054e c9        ret     
 ;*********************************************************************
 ; called from 027a, 029d, 02ab, 045e, 1211, 12e4, 1340, 135d
+;
+; writes 800b-800d freq data to display
+;
 054f e5        push    hl					
 0550 c5        push    bc
 0551 f5        push    af
 0552 0641      ld      b,41h
-0554 cdb10c    call    0cb1h				; write 41h to port B, return with a = port A
-0557 cb6f      bit     5,a
-0559 2847      jr      z,05a2h
+0554 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel) 
+0557 cb6f      bit     5,a					; z=!a.5
+0559 2847      jr      z,05a2h				; exit if a.5 false
 055b 210f80    ld      hl,800fh
 055e 3e2f      ld      a,2fh
-0560 cd5606    call    0656h				;
-0563 210b80    ld      hl,800bh
-0566 7e        ld      a,(hl)
+0560 cd5606    call    0656h				; put [set bit 7 clr bit 6 of (800e)+b] into (hl)
+0563 210b80    ld      hl,800bh				; 10 Mhz and 1 MHz
+0566 7e        ld      a,(hl)				; a=(800b)
 0567 1f        rra     
 0568 1f        rra     
 0569 1f        rra     
@@ -719,20 +725,20 @@
 056b e60f      and     0fh
 056d f620      or      20h
 056f 0648      ld      b,48h
-0571 cd5415    call    1554h				; write out xxh 48h to ports A and B
-0574 7e        ld      a,(hl)
+0571 cd5415    call    1554h				; write a to I/O addr 48h (high nyb of 800b to digit 1)
+0574 7e        ld      a,(hl)				; a=(800b)
 0575 e60f      and     0fh
 0577 f620      or      20h
 0579 0649      ld      b,49h
-057b cd5415    call    1554h				; write out xxh 49h to ports A and B
-057e 23        inc     hl
-057f 7e        ld      a,(hl)
+057b cd5415    call    1554h				; write a to I/O addr 49h (low nyb of 800b to digit 2)
+057e 23        inc     hl					;
+057f 7e        ld      a,(hl)				; a=(800c)
 0580 e60f      and     0fh
 0582 f620      or      20h
 0584 064a      ld      b,4ah
-0586 cd5415    call    1554h				; write out xxh 4ah to ports A and B
+0586 cd5415    call    1554h				; write a to I/O addr 4ah (low nyb of 800c to digit 3)
 0589 23        inc     hl
-058a 7e        ld      a,(hl)
+058a 7e        ld      a,(hl)				; a=(800d)
 058b 1f        rra     
 058c 1f        rra     
 058d 1f        rra     
@@ -740,12 +746,12 @@
 058f e60f      and     0fh
 0591 f620      or      20h
 0593 064b      ld      b,4bh
-0595 cd5415    call    1554h				; write out xxh 4bh to ports A and B
-0598 7e        ld      a,(hl)
+0595 cd5415    call    1554h				; write a to I/O addr 4bh (high nyb of 800d to digit 4)
+0598 7e        ld      a,(hl)				; a=(800d)
 0599 e60f      and     0fh
 059b f620      or      20h
 059d 064c      ld      b,4ch
-059f cd5415    call    1554h				; write out xxh 4ch to ports A and B
+059f cd5415    call    1554h				; write a to I/O addr 4ch (low nyb of 800d to digit 5)
 05a2 f1        pop     af
 05a3 c1        pop     bc
 05a4 e1        pop     hl
@@ -753,7 +759,7 @@
 ;*********************************************************************************
 ; called from 13cf
 05a6 0e00      ld      c,00h				
-05a8 3a0b80    ld      a,(800bh)
+05a8 3a0b80    ld      a,(800bh)			; 10 Mhz and 1 MHz
 05ab 21cf05    ld      hl,05cfh				; data at 05cf
 05ae be        cp      (hl)
 05af 2807      jr      z,05b8h
@@ -762,7 +768,7 @@
 05b4 23        inc     hl
 05b5 0c        inc     c
 05b6 18f6      jr      05aeh
-05b8 3a0c80    ld      a,(800ch)
+05b8 3a0c80    ld      a,(800ch)			; 100 kHz
 05bb e60f      and     0fh
 05bd 23        inc     hl
 05be be        cp      (hl)
@@ -773,7 +779,7 @@
 05c7 09        add     hl,bc
 05c8 7e        ld      a,(hl)
 05c9 06b3      ld      b,0b3h
-05cb cd5415    call    1554h				; write out xxh b3h to ports A and B
+05cb cd5415    call    1554h				; write a to I/O addr b3h
 05ce c9        ret     
 ;************************************************************************************
 ; data used at 05ab
@@ -799,7 +805,7 @@
 ;*********************************************************************************
 ; called from 13d2
 0607 0e00      ld      c,00h				
-0609 3a0b80    ld      a,(800bh)
+0609 3a0b80    ld      a,(800bh)			; 10 Mhz and 1 MHz
 060c 213806    ld      hl,0638h				; data at 0638
 060f be        cp      (hl)
 0610 2807      jr      z,0619h
@@ -808,7 +814,7 @@
 0615 23        inc     hl
 0616 0c        inc     c
 0617 18f6      jr      060fh
-0619 3a0c80    ld      a,(800ch)
+0619 3a0c80    ld      a,(800ch)			; 100 kHz
 061c e60f      and     0fh
 061e 23        inc     hl
 061f be        cp      (hl)
@@ -833,12 +839,15 @@
 0650           db      004h, 008h, 009h, 00ah, 00bh, 00ch
 ;****************************************************************************
 ; called by 0560, 0b29, 0b59
-0656 47        ld      b,a					
-0657 3a0e80    ld      a,(800eh)
-065a 80        add     a,b
-065b e63f      and     3fh
-065d f680      or      80h
-065f 77        ld      (hl),a
+;
+; put [set bit 7 clr bit 6 of (800e)+b] into (hl)
+;
+0656 47        ld      b,a					; b=a		
+0657 3a0e80    ld      a,(800eh)			; a=(800e)
+065a 80        add     a,b					; a=a+b
+065b e63f      and     3fh					; strip bits 6 and 7
+065d f680      or      80h					; set bit 7
+065f 77        ld      (hl),a				; (hl)=a
 0660 c9        ret     
 ;*****************************************************************************
 ; where is this called from?
@@ -886,7 +895,7 @@
 06c1 e603      and     03h
 06c3 2020      jr      nz,06e5h
 06c5 0640      ld      b,40h
-06c7 cdb10c    call    0cb1h				; write 40h to port B, return with a = port A
+06c7 cdb10c    call    0cb1h				; read hardware port 40h to a (front panel)
 06ca eeff      xor     0ffh
 06cc e61f      and     1fh
 06ce 47        ld      b,a
@@ -894,7 +903,7 @@
 06d2 b8        cp      b
 06d3 200b      jr      nz,06e0h
 06d5 0643      ld      b,43h
-06d7 cdb10c    call    0cb1h				; write 43h to port B, return with a = port A
+06d7 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
 06da eeff      xor     0ffh
 06dc e60f      and     0fh
 06de 2805      jr      z,06e5h
@@ -923,18 +932,18 @@
 ;**************************************************************************************
 ; from 0084
 070d 3e00      ld      a,00h				
-070f d3bb      out     (0bbh),a
-0711 317f80    ld      sp,807fh
+070f d3bb      out     (0bbh),a				; write 0 to port bb
+0711 317f80    ld      sp,807fh				; stack pointer reset
 0714 fd216106  ld      iy,0661h
 0718 dd21be01  ld      ix,01beh
 071c cdd008    call    08d0h				;
 071f cdcb0b    call    0bcbh				;
 0722 cd2509    call    0925h				;
-0725 cdf001    call    01f0h				;
+0725 cdf001    call    01f0h				; blank display
 0728 cdda02    call    02dah				;
 072b f3        di      
 072c 3e0c      ld      a,0ch
-072e d3bb      out     (0bbh),a
+072e d3bb      out     (0bbh),a				; write 0ch to port bb
 0730 fb        ei      
 0731 c38700    jp      0087h				;
 ;**************************************************************************************
@@ -943,9 +952,9 @@
 0737 7e        ld      a,(hl)
 0738 cbaf      res     5,a
 073a 0611      ld      b,11h
-073c cd5415    call    1554h				; write out xxh 11h to ports A and B
+073c cd5415    call    1554h				; write a to I/O addr 11h
 073f cbd7      set     2,a
-0741 cd5415    call    1554h				; write out xxh xxh to ports A and B
+0741 cd5415    call    1554h				; write a to I/O addr 11h
 0744 77        ld      (hl),a
 0745 210380    ld      hl,8003h
 0748 3e0d      ld      a,0dh
@@ -956,32 +965,32 @@
 0755 cb76      bit     6,(hl)
 0757 203f      jr      nz,0798h
 0759 0653      ld      b,53h
-075b cdb10c    call    0cb1h				; write 53h to port B, return with a = port A
+075b cdb10c    call    0cb1h				; read hardware port 53h to a (radio)
 075e cb4f      bit     1,a
 0760 28f3      jr      z,0755h
-0762 cdb10c    call    0cb1h				; write b to port B, return with a = port A
+0762 cdb10c    call    0cb1h				; read hardware port 53h to a (radio) 
 0765 cb4f      bit     1,a
 0767 28ec      jr      z,0755h
-0769 cdb10c    call    0cb1h				; write b to port B, return with a = port A
+0769 cdb10c    call    0cb1h				; read hardware port 53h to a (radio) 
 076c cb4f      bit     1,a
 076e 28e5      jr      z,0755h
 0770 211580    ld      hl,8015h
 0773 cbce      set     1,(hl)
 0775 7e        ld      a,(hl)
 0776 0611      ld      b,11h
-0778 cd5415    call    1554h				; write out xxh 11h to ports A and B
+0778 cd5415    call    1554h				; write a to I/O addr 11h
 077b 06b1      ld      b,0b1h
-077d cd5415    call    1554h				; write out xxh b1h to ports A and B
+077d cd5415    call    1554h				; write a to I/O addr b1h
 0780 211580    ld      hl,8015h
 0783 cbde      set     3,(hl)
 0785 7e        ld      a,(hl)
 0786 0611      ld      b,11h
-0788 cd5415    call    1554h				; write out xxh 11h to ports A and B
+0788 cd5415    call    1554h				; write a to I/O addr 11h
 078b 211780    ld      hl,8017h
 078e cbee      set     5,(hl)
 0790 7e        ld      a,(hl)
 0791 0613      ld      b,13h
-0793 cd5415    call    1554h				; write out xxh 13h to ports A and B
+0793 cd5415    call    1554h				; write a to I/O addr 13h
 0796 180e      jr      07a6h
 0798 211580    ld      hl,8015h
 079b 7e        ld      a,(hl)
@@ -989,7 +998,7 @@
 079e cbef      set     5,a
 07a0 77        ld      (hl),a
 07a1 0611      ld      b,11h
-07a3 cd5415    call    1554h				; write out xxh 11h to ports A and B
+07a3 cd5415    call    1554h				; write a to I/O addr 11h
 07a6 c9        ret     
 ;********************************************************************************
 ; called from 135a
@@ -998,7 +1007,7 @@
 07ac 2826      jr      z,07d4h
 07ae cb57      bit     2,a
 07b0 2812      jr      z,07c4h
-07b2 210d80    ld      hl,800dh
+07b2 210d80    ld      hl,800dh				; 10 kHz and 1 kHz
 07b5 7e        ld      a,(hl)
 07b6 c625      add     a,25h
 07b8 27        daa     
@@ -1010,7 +1019,7 @@
 07bf e60f      and     0fh
 07c1 77        ld      (hl),a
 07c2 1810      jr      07d4h
-07c4 210d80    ld      hl,800dh
+07c4 210d80    ld      hl,800dh				; 10 kHz and 1 kHz
 07c7 7e        ld      a,(hl)
 07c8 d625      sub     25h
 07ca 27        daa     
@@ -1048,7 +1057,7 @@
 07eb cb96      res     2,(hl)
 07ed 7e        ld      a,(hl)
 07ee 0613      ld      b,13h
-07f0 cd5415    call    1554h				; write out xxh 13h to ports A and B
+07f0 cd5415    call    1554h				; write a to I/O addr 13h
 07f3 3e00      ld      a,00h
 07f5 320180    ld      (8001h),a
 07f8 3e34      ld      a,34h
@@ -1056,12 +1065,12 @@
 07fd 212680    ld      hl,8026h
 0800 cbbe      res     7,(hl)
 0802 0611      ld      b,11h
-0804 cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+0804 cdb10c    call    0cb1h				; read hardware port 11h to a 
 0807 cb6f      bit     5,a
 0809 200f      jr      nz,081ah
 080b cde812    call    12e8h				;
 080e 0611      ld      b,11h
-0810 cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+0810 cdb10c    call    0cb1h				; read hardware port 11h to a 
 0813 cb6f      bit     5,a
 0815 28f7      jr      z,080eh
 0817 cdbe02    call    02beh				;
@@ -1073,7 +1082,7 @@
 0821 cb76      bit     6,(hl)
 0823 281a      jr      z,083fh
 0825 0610      ld      b,10h
-0827 cdb10c    call    0cb1h				; write 10h to port B, return with a = port A
+0827 cdb10c    call    0cb1h				; read hardware port 10h to a 
 082a cb6f      bit     5,a
 082c 280c      jr      z,083ah
 082e 211480    ld      hl,8014h
@@ -1084,7 +1093,7 @@
 083a cd170f    call    0f17h				;
 083d 182b      jr      086ah
 083f 0611      ld      b,11h
-0841 cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+0841 cdb10c    call    0cb1h				; read hardware port 10h to a 
 0844 cb5f      bit     3,a
 0846 2805      jr      z,084dh
 0848 cd6b09    call    096bh				;
@@ -1095,7 +1104,7 @@
 0854 cde807    call    07e8h				;
 0857 1811      jr      086ah
 0859 0611      ld      b,11h
-085b cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+085b cdb10c    call    0cb1h				; read hardware port 11h to a 
 085e cb6f      bit     5,a
 0860 2005      jr      nz,0867h
 0862 cded13    call    13edh				;
@@ -1109,11 +1118,11 @@
 0872 281f      jr      z,0893h
 0874 cb47      bit     0,a
 0876 2807      jr      z,087fh
-0878 3a0b80    ld      a,(800bh)
+0878 3a0b80    ld      a,(800bh)			; 10 Mhz and 1 MHz
 087b 3c        inc     a
 087c 27        daa     
 087d 1805      jr      0884h
-087f 3a0b80    ld      a,(800bh)
+087f 3a0b80    ld      a,(800bh)			; 10 Mhz and 1 MHz
 0882 3d        dec     a
 0883 27        daa     
 0884 fe76      cp      76h
@@ -1122,7 +1131,7 @@
 088a fe29      cp      29h
 088c 2002      jr      nz,0890h
 088e 3e75      ld      a,75h
-0890 320b80    ld      (800bh),a
+0890 320b80    ld      (800bh),a			; 10 Mhz and 1 MHz
 0893 c9        ret     
 ;*************************************************************************
 ; called by 0516, 0eeb, 10fe, 12b9
@@ -1282,7 +1291,7 @@
 0970 cb96      res     2,(hl)
 0972 7e        ld      a,(hl)
 0973 0613      ld      b,13h
-0975 cd5415    call    1554h				; write out xxh 13h to ports A and B
+0975 cd5415    call    1554h				; write a to I/O addr 13h
 0978 3e00      ld      a,00h
 097a 320180    ld      (8001h),a
 097d 3e34      ld      a,34h
@@ -1290,24 +1299,24 @@
 0982 212680    ld      hl,8026h
 0985 cbbe      res     7,(hl)
 0987 0611      ld      b,11h
-0989 cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+0989 cdb10c    call    0cb1h				; read hardware port 11h to a 
 098c cb4f      bit     1,a
 098e 280f      jr      z,099fh
 0990 cd3407    call    0734h				;
 0993 0611      ld      b,11h
-0995 cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+0995 cdb10c    call    0cb1h				; read hardware port 11h to a 
 0998 cb4f      bit     1,a
 099a 20f7      jr      nz,0993h
 099c cded14    call    14edh				;
 099f 0611      ld      b,11h
-09a1 cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+09a1 cdb10c    call    0cb1h				; read hardware port 11h to a
 09a4 cb5f      bit     3,a
 09a6 20df      jr      nz,0987h
 09a8 211780    ld      hl,8017h
 09ab cb86      res     0,(hl)
 09ad 7e        ld      a,(hl)
 09ae 0613      ld      b,13h
-09b0 cd5415    call    1554h				; write out xxh 13h to ports A and B
+09b0 cd5415    call    1554h				; write a to I/O addr 13h
 09b3 c9        ret     
 ;***********************************************************************
 ; called by 1221
@@ -1356,7 +1365,7 @@
 0a07 b1        or      c
 0a08 77        ld      (hl),a
 0a09 0612      ld      b,12h
-0a0b cd5415    call    1554h				; write out xxh 12h to ports A and B
+0a0b cd5415    call    1554h				; write a to I/O addr 12h
 0a0e 211e80    ld      hl,801eh
 0a11 cb76      bit     6,(hl)
 0a13 280d      jr      z,0a22h
@@ -1364,18 +1373,18 @@
 0a18 cba6      res     4,(hl)
 0a1a 7e        ld      a,(hl)
 0a1b 0612      ld      b,12h
-0a1d cd5415    call    1554h				; write out xxh 12h to ports A and B
+0a1d cd5415    call    1554h				; write a to I/O addr 12h
 0a20 1816      jr      0a38h
 0a22 211680    ld      hl,8016h
 0a25 cbe6      set     4,(hl)
 0a27 7e        ld      a,(hl)
 0a28 0612      ld      b,12h
-0a2a cd5415    call    1554h				; write out xxh 12h to ports A and B
+0a2a cd5415    call    1554h				; write a to I/O addr 12h
 0a2d 211480    ld      hl,8014h
 0a30 cbae      res     5,(hl)
 0a32 7e        ld      a,(hl)
 0a33 0610      ld      b,10h
-0a35 cd5415    call    1554h				; write out xxh 10h to ports A and B
+0a35 cd5415    call    1554h				; write a to I/O addr 10h
 0a38 211e80    ld      hl,801eh
 0a3b cb7e      bit     7,(hl)
 0a3d 2805      jr      z,0a44h
@@ -1388,7 +1397,7 @@
 0a4e cbce      set     1,(hl)
 0a50 7e        ld      a,(hl)
 0a51 0613      ld      b,13h
-0a53 cd5415    call    1554h				; write out xxh 13h to ports A and B
+0a53 cd5415    call    1554h				; write a to I/O addr 13h
 0a56 212780    ld      hl,8027h
 0a59 cb86      res     0,(hl)
 0a5b 180b      jr      0a68h
@@ -1396,12 +1405,12 @@
 0a60 cb8e      res     1,(hl)
 0a62 7e        ld      a,(hl)
 0a63 0613      ld      b,13h
-0a65 cd5415    call    1554h				; write out xxh 13h to ports A and B
+0a65 cd5415    call    1554h				; write a to I/O addr 13h
 0a68 c9        ret     
 ;****************************************************************************************
 ; called from 13c9
 0a69 010000    ld      bc,0000h				
-0a6c 3a0c80    ld      a,(800ch)
+0a6c 3a0c80    ld      a,(800ch)			; 100 kHz
 0a6f e60f      and     0fh
 0a71 fe03      cp      03h
 0a73 3806      jr      c,0a7bh
@@ -1409,7 +1418,7 @@
 0a76 fe08      cp      08h
 0a78 3801      jr      c,0a7bh
 0a7a 0c        inc     c
-0a7b 3a0b80    ld      a,(800bh)
+0a7b 3a0b80    ld      a,(800bh)			; 10 Mhz and 1 MHz
 0a7e cdc003    call    03c0h				;
 0a81 fe3e      cp      3eh
 0a83 380c      jr      c,0a91h
@@ -1438,9 +1447,9 @@
 0aab 7e        ld      a,(hl)
 0aac 321a80    ld      (801ah),a
 0aaf 0630      ld      b,30h
-0ab1 cd5415    call    1554h				; write out (801ah) 30h to ports A and B
+0ab1 cd5415    call    1554h				; write (801ah) to I/O addr 30h
 0ab4 0623      ld      b,23h
-0ab6 cd5415    call    1554h				;
+0ab6 cd5415    call    1554h				; write (801ah) to I/O addr 23h
 0ab9 c9        ret     
 ;************************************************************************************
 ; data used at 0aa1
@@ -1469,7 +1478,7 @@
 0b22 2838      jr      z,0b5ch
 0b24 210480    ld      hl,8004h
 0b27 3e09      ld      a,09h
-0b29 cd5606    call    0656h				;
+0b29 cd5606    call    0656h				; put [set bit 7 clr bit 6 of (800e)+b] into (hl)
 0b2c 3e00      ld      a,00h
 0b2e 320580    ld      (8005h),a
 0b31 329680    ld      (8096h),a			; stop timer 1
@@ -1489,12 +1498,12 @@
 0b52 1808      jr      0b5ch
 0b54 3e02      ld      a,02h
 0b56 210480    ld      hl,8004h
-0b59 cd5606    call    0656h				;
+0b59 cd5606    call    0656h				; put [set bit 7 clr bit 6 of (800e)+b] into (hl)
 0b5c c9        ret     
 ;*************************************************************************************
 ; called from 0f27, 0ff9, 1035
 0b5d 0611      ld      b,11h				
-0b5f cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+0b5f cdb10c    call    0cb1h				; read hardware port 11h to a 
 0b62 cb57      bit     2,a
 0b64 281f      jr      z,0b85h
 0b66 217400    ld      hl,0074h
@@ -1503,7 +1512,7 @@
 0b6b b5        or      l
 0b6c 20fb      jr      nz,0b69h
 0b6e 0611      ld      b,11h
-0b70 cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+0b70 cdb10c    call    0cb1h				; read hardware port 11h to a 
 0b73 cb57      bit     2,a
 0b75 2807      jr      z,0b7eh
 0b77 212780    ld      hl,8027h
@@ -1520,7 +1529,7 @@
 0b91 3e00      ld      a,00h
 0b93 320380    ld      (8003h),a
 0b96 0612      ld      b,12h
-0b98 cdb10c    call    0cb1h				; write 12h to port B, return with a = port A
+0b98 cdb10c    call    0cb1h				; read hardware port 12h to a 
 0b9b cb47      bit     0,a
 0b9d 2026      jr      nz,0bc5h
 0b9f 210380    ld      hl,8003h
@@ -1532,7 +1541,7 @@
 0bab b5        or      l
 0bac 20fb      jr      nz,0ba9h
 0bae 0612      ld      b,12h
-0bb0 cdb10c    call    0cb1h				; write 12h to port B, return with a = port A
+0bb0 cdb10c    call    0cb1h				; read hardware port 12h to a 
 0bb3 cb47      bit     0,a
 0bb5 2007      jr      nz,0bbeh
 0bb7 212780    ld      hl,8027h
@@ -1554,12 +1563,12 @@
 0bd4 10fc      djnz    0bd2h
 0bd6 0e00      ld      c,00h
 0bd8 0641      ld      b,41h
-0bda cdb10c    call    0cb1h				; write 41h to port B, return with a = port A
+0bda cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
 0bdd cb6f      bit     5,a
 0bdf 2802      jr      z,0be3h
 0be1 cbd9      set     3,c
 0be3 0643      ld      b,43h
-0be5 cdb10c    call    0cb1h				; write 43h to port B, return with a = port A
+0be5 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
 0be8 cb67      bit     4,a
 0bea 2002      jr      nz,0beeh
 0bec cbe1      set     4,c
@@ -1574,7 +1583,7 @@
 0c01 3e27      ld      a,27h
 0c03 328680    ld      (8086h),a			; set DDR C port direction
 0c06 79        ld      a,c
-0c07 322680    ld      (8026h),a
+0c07 322680    ld      (8026h),a			; set DDR C port direction
 0c0a 3eff      ld      a,0ffh
 0c0c 321980    ld      (8019h),a
 0c0f 211d80    ld      hl,801dh
@@ -1641,14 +1650,14 @@
 0c78 3a1480    ld      a,(8014h)
 0c7b e6f0      and     0f0h
 0c7d 0610      ld      b,10h
-0c7f cd5415    call    1554h				; write out xxh 10h to ports A and B
+0c7f cd5415    call    1554h				; write a to I/O addr 10h
 0c82 3e04      ld      a,04h
 0c84 328e80    ld      (808eh),a			; bit set port C
 0c87 0650      ld      b,50h
 0c89 10fe      djnz    0c89h
 0c8b 328a80    ld      (808ah),a			; bit clear port C
 0c8e 0610      ld      b,10h
-0c90 cdb10c    call    0cb1h				; write 10h to port B, return with a = port A
+0c90 cdb10c    call    0cb1h				; read hardware port 10h to a 
 0c93 e61f      and     1fh
 0c95 4f        ld      c,a
 0c96 f1        pop     af
@@ -1683,11 +1692,12 @@
 ; 13ef, 140e, 1472, 1485, 148e, 14a8, 1533, 1636, 1690, 16c9, 16f0, 170e, 1b55, 1b8b, 1b9e
 ; 1cd1, 1cfc, 1d1a, 1d47, 1d6f, 1dd3, 1e62, 1e82, 1eaa, 1eca, 1ef3, 1efe, 21a7, 21c7
 ;
-; write reg b to port B
-; delay 26 cycles
-; read port A
-; write 0 to port B
-; return port A data in reg a
+; read external hardware port b to a
+; 1x = radio/encry interface
+; 4x = front panel
+; 5x = radio
+;
+; The following external addresses are queried: 10, 11, 12, 13, 40, 41, 42, 43, 53
 ;
 ;
 0cb1 c5        push    bc					
@@ -1712,8 +1722,11 @@
 0cd3 c9        ret   
 ;******************************************************************************  
 ; called by 13c0
+;
+; writes data to radio section
+;
 0cd4 110000    ld      de,0000h				
-0cd7 210d80    ld      hl,800dh
+0cd7 210d80    ld      hl,800dh				; 10 kHz and 1 kHz
 0cda 7e        ld      a,(hl)
 0cdb 87        add     a,a
 0cdc 27        daa     
@@ -1770,7 +1783,7 @@
 0d22 57        ld      d,a
 0d23 e60f      and     0fh
 0d25 0652      ld      b,52h
-0d27 cd5415    call    1554h				; write out xxh 52h to ports A and B
+0d27 cd5415    call    1554h				; write a to I/O addr 52h
 0d2a 7a        ld      a,d
 0d2b 1f        rra     
 0d2c 1f        rra     
@@ -1778,11 +1791,11 @@
 0d2e 1f        rra     
 0d2f e60f      and     0fh
 0d31 f610      or      10h
-0d33 cd5415    call    1554h				; write out xxh 52h to ports A and B
+0d33 cd5415    call    1554h				; write a to I/O addr 52h
 0d36 7b        ld      a,e
 0d37 e60f      and     0fh
 0d39 f620      or      20h
-0d3b cd5415    call    1554h				; write out xxh 52h to ports A and B
+0d3b cd5415    call    1554h				; write a to I/O addr 52h
 0d3e 7b        ld      a,e
 0d3f 1f        rra     
 0d40 1f        rra     
@@ -1790,19 +1803,19 @@
 0d42 1f        rra     
 0d43 e60f      and     0fh
 0d45 f630      or      30h
-0d47 cd5415    call    1554h				; write out xxh 52h to ports A and B
+0d47 cd5415    call    1554h				; write a to I/O addr 52h
 0d4a 3e40      ld      a,40h
-0d4c cd5415    call    1554h				; write out 40h 52h to ports A and B
+0d4c cd5415    call    1554h				; write 40h to I/O addr 52h
 0d4f 3e50      ld      a,50h
-0d51 cd5415    call    1554h				; write out 50h 52h to ports A and B
+0d51 cd5415    call    1554h				; write 50h to I/O addr 52h
 0d54 3e60      ld      a,60h
-0d56 cd5415    call    1554h				; write out 60h 52h to ports A and B
+0d56 cd5415    call    1554h				; write 60h to I/O addr 52h
 0d59 3e71      ld      a,71h
-0d5b cd5415    call    1554h				; write out 71h 52h to ports A and B
+0d5b cd5415    call    1554h				; write 71h to I/O addr 52h
 0d5e c9        ret     
 ;*********************************************************************************************
 ; called from 13c6
-0d5f 3a0b80    ld      a,(800bh)			
+0d5f 3a0b80    ld      a,(800bh)			; 10 Mhz and 1 MHz	
 0d62 fe62      cp      62h
 0d64 3808      jr      c,0d6eh
 0d66 0e40      ld      c,40h
@@ -1828,32 +1841,32 @@
 0d8f 321980    ld      (8019h),a
 0d92 3e00      ld      a,00h
 0d94 0631      ld      b,31h
-0d96 cd5415    call    1554h				; write out 00h 31h to ports A and B
+0d96 cd5415    call    1554h				; write 00h to I/O addr 31h
 0d99 3e04      ld      a,04h
 0d9b 0622      ld      b,22h
-0d9d cd5415    call    1554h				; write out 04h 22h to ports A and B
+0d9d cd5415    call    1554h				; write 04h to I/O addr 22h
 0da0 3e01      ld      a,01h
 0da2 cdd507    call    07d5h				; delay 180h * a periods
 0da5 3e08      ld      a,08h
 0da7 0631      ld      b,31h
-0da9 cd5415    call    1554h				; write out 08h 31h to ports A and B
+0da9 cd5415    call    1554h				; write 08h to I/O addr 31h
 0dac 3e00      ld      a,00h
 0dae 0622      ld      b,22h
-0db0 cd5415    call    1554h				; write out 00h 22h to ports A and B
+0db0 cd5415    call    1554h				; write 00h to I/O addr 22h
 0db3 7a        ld      a,d
 0db4 0621      ld      b,21h
-0db6 cd5415    call    1554h				; write out d 21h to ports A and B
+0db6 cd5415    call    1554h				; write d to I/O addr 21h
 0db9 7b        ld      a,e
 0dba 0631      ld      b,31h
-0dbc cd5415    call    1554h				; write out e 21h to ports A and B
+0dbc cd5415    call    1554h				; write e to I/O addr 21h
 0dbf 3e01      ld      a,01h
 0dc1 cdd507    call    07d5h				; delay 180h * a periods
 0dc4 3e00      ld      a,00h
 0dc6 0621      ld      b,21h
-0dc8 cd5415    call    1554h				; write out 00h 21h to ports A and B
+0dc8 cd5415    call    1554h				; write 00h to I/O addr 21h
 0dcb 3e08      ld      a,08h
 0dcd 0631      ld      b,31h
-0dcf cd5415    call    1554h				; write out 08h 31h to ports A and B
+0dcf cd5415    call    1554h				; write 08h to I/O addr 31h
 0dd2 c9        ret     
 ;********************************************************************************
 ; called by 1243
@@ -1861,26 +1874,26 @@
 0dd6 f606      or      06h
 0dd8 321580    ld      (8015h),a
 0ddb 0611      ld      b,11h
-0ddd cd5415    call    1554h				; write out (8015h) 11h to ports A and B
+0ddd cd5415    call    1554h				; write (8015h) to I/O addr 11h
 0de0 3e01      ld      a,01h
 0de2 0621      ld      b,21h
-0de4 cd5415    call    1554h				; write out 01h 21h to ports A and B
+0de4 cd5415    call    1554h				; write 01h to I/O addr 21h
 0de7 3e08      ld      a,08h
 0de9 0622      ld      b,22h
-0deb cd5415    call    1554h				; write out 08h 22h to ports A and B
+0deb cd5415    call    1554h				; write 08h to I/O addr 22h
 0dee 3e1f      ld      a,1fh
 0df0 212a80    ld      hl,802ah
 0df3 cdb513    call    13b5h				; (hl)=(8013)+b with bit6=0 and bit7=1
 0df6 cb76      bit     6,(hl)
 0df8 c2e30e    jp      nz,0ee3h
 0dfb 0653      ld      b,53h
-0dfd cdb10c    call    0cb1h				; write 53h to port B, return with a = port A
+0dfd cdb10c    call    0cb1h				; read hardware port 53h to a
 0e00 cb4f      bit     1,a
 0e02 28f2      jr      z,0df6h
-0e04 cdb10c    call    0cb1h				; write b to port B, return with a = port A
+0e04 cdb10c    call    0cb1h				; read hardware port 53h to a
 0e07 cb4f      bit     1,a
 0e09 28eb      jr      z,0df6h
-0e0b cdb10c    call    0cb1h				; write b to port B, return with a = port A
+0e0b cdb10c    call    0cb1h				; read hardware port 53h to a
 0e0e cb4f      bit     1,a
 0e10 28e4      jr      z,0df6h
 0e12 3a1a80    ld      a,(801ah)
@@ -1905,7 +1918,7 @@
 0e35 82        add     a,d
 0e36 14        inc     d
 0e37 0623      ld      b,23h
-0e39 cd5415    call    1554h				; write out xxh 23h to ports A and B
+0e39 cd5415    call    1554h				; write a to I/O addr 23h
 0e3c 0624      ld      b,24h
 0e3e cd280c    call    0c28h				;
 0e41 fe40      cp      40h
@@ -1942,7 +1955,7 @@
 0e79 82        add     a,d
 0e7a 14        inc     d
 0e7b 0623      ld      b,23h
-0e7d cd5415    call    1554h				; write out xxh 23h to ports A and B
+0e7d cd5415    call    1554h				; write a to I/O addr 23h
 0e80 0624      ld      b,24h
 0e82 cd280c    call    0c28h				;
 0e85 d608      sub     08h
@@ -2000,26 +2013,26 @@
 0ede 82        add     a,d
 0edf 81        add     a,c
 0ee0 321a80    ld      (801ah),a
-0ee3 210b80    ld      hl,800bh
+0ee3 210b80    ld      hl,800bh				; 10 Mhz and 1 MHz
 0ee6 010880    ld      bc,8008h
 0ee9 3e03      ld      a,03h
 0eeb cd9408    call    0894h				;
 0eee 3a1a80    ld      a,(801ah)
 0ef1 0623      ld      b,23h
-0ef3 cd5415    call    1554h				; write out (801ah) 23h to ports A and B
+0ef3 cd5415    call    1554h				; write (801ah) to I/O addr 23h
 0ef6 0630      ld      b,30h
-0ef8 cd5415    call    1554h				; write out (801ah) 30h to ports A and B
+0ef8 cd5415    call    1554h				; write (801ah) to I/O addr 30h
 0efb 3e00      ld      a,00h
 0efd 0621      ld      b,21h
-0eff cd5415    call    1554h				; write out 00h 21h to ports A and B
+0eff cd5415    call    1554h				; write 00h to I/O addr 21h
 0f02 3e00      ld      a,00h
 0f04 0622      ld      b,22h
-0f06 cd5415    call    1554h				; write out 00h 22h to ports A and B
+0f06 cd5415    call    1554h				; write 00h to I/O addr 22h
 0f09 3a1580    ld      a,(8015h)
 0f0c e6f9      and     0f9h
 0f0e 321580    ld      (8015h),a
 0f11 0611      ld      b,11h
-0f13 cd5415    call    1554h				; write out (8015h) 11h to ports A and B
+0f13 cd5415    call    1554h				; write (8015h) to I/O addr 11h
 0f16 c9        ret     
 ;****************************************************************************
 ; called by 083a
@@ -2027,7 +2040,7 @@
 0f1a cb96      res     2,(hl)
 0f1c 7e        ld      a,(hl)
 0f1d 0613      ld      b,13h
-0f1f cd5415    call    1554h				; write out xxh 13h to ports A and B
+0f1f cd5415    call    1554h				; write a to I/O addr 13h
 0f22 212680    ld      hl,8026h
 0f25 cbbe      res     7,(hl)
 0f27 cd5d0b    call    0b5dh				;
@@ -2038,7 +2051,7 @@
 0f34 cbee      set     5,(hl)
 0f36 7e        ld      a,(hl)
 0f37 0610      ld      b,10h
-0f39 cd5415    call    1554h				; write out xxh 10h to ports A and B
+0f39 cd5415    call    1554h				; write a to I/O addr 10h
 0f3c 3e01      ld      a,01h
 0f3e 320180    ld      (8001h),a
 0f41 3e0c      ld      a,0ch
@@ -2053,7 +2066,7 @@
 0f57 cbee      set     5,(hl)
 0f59 7e        ld      a,(hl)
 0f5a 0610      ld      b,10h
-0f5c cd5415    call    1554h				; write out xxh 10h to ports A and B
+0f5c cd5415    call    1554h				; write a to I/O addr 10h
 0f5f 211d80    ld      hl,801dh
 0f62 cb6e      bit     5,(hl)
 0f64 2804      jr      z,0f6ah
@@ -2072,7 +2085,7 @@
 0f83 cbae      res     5,(hl)
 0f85 7e        ld      a,(hl)
 0f86 0610      ld      b,10h
-0f88 cd5415    call    1554h				; write out xxh 10h to ports A and B
+0f88 cd5415    call    1554h				; write a to I/O addr 10h
 0f8b 212780    ld      hl,8027h
 0f8e cb46      bit     0,(hl)
 0f90 2804      jr      z,0f96h
@@ -2090,11 +2103,11 @@
 0fa2 cbae      res     5,(hl)
 0fa4 7e        ld      a,(hl)
 0fa5 0610      ld      b,10h
-0fa7 cd5415    call    1554h				; write out xxh 10h to ports A and B
+0fa7 cd5415    call    1554h				; write a to I/O addr 10h
 0faa cbef      set     5,a
-0fac cd5415    call    1554h				; write out xxh 10h to ports A and B
+0fac cd5415    call    1554h				; write a to I/O addr 10h
 0faf cbaf      res     5,a
-0fb1 cd5415    call    1554h				; write out xxh 10h to ports A and B
+0fb1 cd5415    call    1554h				; write a to I/O addr 10h
 0fb4 e1        pop     hl
 0fb5 c1        pop     bc
 0fb6 f1        pop     af
@@ -2105,23 +2118,23 @@
 0fbb cb96      res     2,(hl)
 0fbd 7e        ld      a,(hl)
 0fbe 0613      ld      b,13h
-0fc0 cd5415    call    1554h				; write out xxh 13h to ports A and B
+0fc0 cd5415    call    1554h				; write a to I/O addr 13h
 0fc3 cd3407    call    0734h				;
 0fc6 3a0280    ld      a,(8002h)
 0fc9 e6f8      and     0f8h
 0fcb f602      or      02h
 0fcd cd8801    call    0188h				;
-0fd0 cdf503    call    03f5h				; write out 00h 4dh to ports A and B - disable display
+0fd0 cdf503    call    03f5h				; write 00h to I/O addr 4dh - disable display
 0fd3 212680    ld      hl,8026h
 0fd6 cbbe      res     7,(hl)
 0fd8 212780    ld      hl,8027h
 0fdb cb86      res     0,(hl)
 0fdd 0641      ld      b,41h
-0fdf cdb10c    call    0cb1h				; write 41h to port B, return with a = port A
+0fdf cdb10c    call    0cb1h				; read hardware port 41h to a (front panel?)
 0fe2 cb57      bit     2,a
 0fe4 203c      jr      nz,1022h
 0fe6 0610      ld      b,10h
-0fe8 cdb10c    call    0cb1h				; write 10h to port B, return with a = port A
+0fe8 cdb10c    call    0cb1h				; read hardware port 10h to a
 0feb cb6f      bit     5,a
 0fed 2833      jr      z,1022h
 0fef 211580    ld      hl,8015h
@@ -2169,7 +2182,7 @@
 1050 cb6e      bit     5,(hl)
 1052 281d      jr      z,1071h
 1054 0611      ld      b,11h
-1056 cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+1056 cdb10c    call    0cb1h				; read hardware port 11h to a
 1059 cb67      bit     4,a
 105b 2814      jr      z,1071h
 105d 180e      jr      106dh
@@ -2215,7 +2228,7 @@
 10b8 cb6e      bit     5,(hl)
 10ba 2011      jr      nz,10cdh
 10bc 0611      ld      b,11h
-10be cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+10be cdb10c    call    0cb1h				; read hardware port 11h to a
 10c1 cb47      bit     0,a
 10c3 2804      jr      z,10c9h
 10c5 0e04      ld      c,04h
@@ -2233,7 +2246,7 @@
 10df b1        or      c
 10e0 321780    ld      (8017h),a
 10e3 0613      ld      b,13h
-10e5 cd5415    call    1554h				; write out (8017h) 13h to ports A and B
+10e5 cd5415    call    1554h				; write (8017h) to I/O addr 13h
 10e8 c9        ret     
 ;********************************************************************************
 ; called by 11d7, 137d
@@ -2250,12 +2263,12 @@
 1103 cdd507    call    07d5h				; delay 180h * a periods
 1106 1600      ld      d,00h
 1108 0640      ld      b,40h
-110a cdb10c    call    0cb1h				; write 40h to port B, return with a = port A
+110a cdb10c    call    0cb1h				; read hardware port 40h to a (front panel)
 110d eeff      xor     0ffh
 110f e63f      and     3fh
 1111 4f        ld      c,a
 1112 0641      ld      b,41h
-1114 cdb10c    call    0cb1h				; write 41h to port B, return with a = port A
+1114 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
 1117 eeff      xor     0ffh
 1119 f5        push    af
 111a e60f      and     0fh
@@ -2276,7 +2289,7 @@
 1130 e6c0      and     0c0h
 1132 4f        ld      c,a
 1133 0642      ld      b,42h
-1135 cdb10c    call    0cb1h				; write 42h to port B, return with a = port A
+1135 cdb10c    call    0cb1h				; read hardware port 42h to a (front panel)
 1138 eeff      xor     0ffh
 113a e63f      and     3fh
 113c b1        or      c
@@ -2287,7 +2300,7 @@
 1143 e6c0      and     0c0h
 1145 4f        ld      c,a
 1146 0643      ld      b,43h
-1148 cdb10c    call    0cb1h				; write 43h to port B, return with a = port A
+1148 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
 114b eeff      xor     0ffh
 114d 47        ld      b,a
 114e e60f      and     0fh
@@ -2376,31 +2389,31 @@
 1200 1f        rra     
 1201 3803      jr      c,1206h
 1203 110cc0    ld      de,0c00ch				; c00c battery backed RAM
-1206 210b80    ld      hl,800bh
+1206 210b80    ld      hl,800bh				; 10 Mhz and 1 MHz
 1209 3e03      ld      a,03h
 120b cda408    call    08a4h				;
 120e cd1a05    call    051ah				;
-1211 cd4f05    call    054fh				;
+1211 cd4f05    call    054fh				; writes 800b-800d freq data to display
 1214 3a1f80    ld      a,(801fh)
 1217 e60f      and     0fh
 1219 c4fc12    call    nz,12fch				;
 121c 212680    ld      hl,8026h
 121f cb96      res     2,(hl)
 1221 cdb409    call    09b4h				;
-1224 3a0b80    ld      a,(800bh)
+1224 3a0b80    ld      a,(800bh)			; 10 Mhz and 1 MHz
 1227 fe11      cp      11h
 1229 2005      jr      nz,1230h
 122b cd2e04    call    042eh				;
 122e 1816      jr      1246h
 1230 cd0d04    call    040dh				;
-1233 210b80    ld      hl,800bh
+1233 210b80    ld      hl,800bh				; 10 Mhz and 1 MHz
 1236 010880    ld      bc,8008h
 1239 3e03      ld      a,03h
 123b cd6a03    call    036ah				;
 123e 3006      jr      nc,1246h
 1240 cdc013    call    13c0h				;
 1243 cdd30d    call    0dd3h				;
-1246 3a0b80    ld      a,(800bh)
+1246 3a0b80    ld      a,(800bh)			; 10 Mhz and 1 MHz
 1249 fe11      cp      11h
 124b cad711    jp      z,11d7h				;
 124e 3a0880    ld      a,(8008h)
@@ -2410,7 +2423,7 @@
 ;**************************************************************************************
 ; called by 10f0
 1257 0610      ld      b,10h				
-1259 cdb10c    call    0cb1h				; write 43 to port B, return with a = port A
+1259 cdb10c    call    0cb1h				;  read hardware port 10h to a 
 125c cb6f      bit     5,a
 125e cae712    jp      z,12e7h
 1261 212080    ld      hl,8020h
@@ -2420,7 +2433,7 @@
 126a cb02      rlc     d
 126c cd9c0f    call    0f9ch				;
 126f 0610      ld      b,10h
-1271 cdb10c    call    0cb1h				; write 10h to port B, return with a = port A
+1271 cdb10c    call    0cb1h				;  read hardware port 10h to a 
 1274 cb82      res     0,d
 1276 cb6f      bit     5,a
 1278 2802      jr      z,127ch
@@ -2451,7 +2464,7 @@
 12ac e6f0      and     0f0h
 12ae 321f80    ld      (801fh),a
 12b1 212080    ld      hl,8020h
-12b4 010b80    ld      bc,800bh
+12b4 010b80    ld      bc,800bh				; 10 Mhz and 1 MHz
 12b7 3e03      ld      a,03h
 12b9 cd9408    call    0894h				;
 12bc 3a1d80    ld      a,(801dh)
@@ -2472,7 +2485,7 @@
 12dc 212080    ld      hl,8020h
 12df 3e03      ld      a,03h
 12e1 cdba08    call    08bah				;
-12e4 cd4f05    call    054fh				;
+12e4 cd4f05    call    054fh				; writes 800b-800d freq data to display
 12e7 c9        ret     
 ;***************************************************************************************
 ; called by 080b, 1409, 145c
@@ -2480,7 +2493,7 @@
 12eb cbe6      set     4,(hl)
 12ed 7e        ld      a,(hl)
 12ee 0613      ld      b,13h
-12f0 cd5415    call    1554h				; write out xxh 13h to ports A and B
+12f0 cd5415    call    1554h				; write a to I/O addr 13h
 12f3 211880    ld      hl,8018h
 12f6 3e10      ld      a,10h
 12f8 cdb513    call    13b5h				; (hl)=(8013)+b with bit6=0 and bit7=1
@@ -2489,39 +2502,40 @@
 ; called from 1219
 12fc 3a2680    ld      a,(8026h)			
 12ff cb4f      bit     1,a
-1301 c2b413    jp      nz,13b4h
+1301 c2b413    jp      nz,13b4h				; return if (8026).1 true
 1304 3a1d80    ld      a,(801dh)
 1307 cb7f      bit     7,a
-1309 c2b413    jp      nz,13b4h
+1309 c2b413    jp      nz,13b4h				; return if (801d).7 true
 130c cb67      bit     4,a
 130e 2008      jr      nz,1318h
 1310 3a1e80    ld      a,(801eh)
 1313 cb7f      bit     7,a
-1315 cab413    jp      z,13b4h
-1318 3a0b80    ld      a,(800bh)
+1315 cab413    jp      z,13b4h				; return if (801e).7 true
+1318 3a0b80    ld      a,(800bh)			; 10 Mhz and 1 MHz
 131b fe11      cp      11h
 131d 2021      jr      nz,1340h
 131f 3a1f80    ld      a,(801fh)
 1322 e60a      and     0ah
 1324 280e      jr      z,1334h
-1326 210b80    ld      hl,800bh
+1326 210b80    ld      hl,800bh				; 10 Mhz and 1 MHz
 1329 3e75      ld      a,75h
-132b 77        ld      (hl),a
+132b 77        ld      (hl),a				; place 75h in 10 and 1 MHz memory locs
 132c 3e00      ld      a,00h
 132e 23        inc     hl
-132f 77        ld      (hl),a
+132f 77        ld      (hl),a				; place 00h in 100 kHz memory loc
 1330 23        inc     hl
-1331 77        ld      (hl),a
+1331 77        ld      (hl),a				; place 00h in 10 kHz and 1 kHz locs
 1332 180c      jr      1340h
-1334 210b80    ld      hl,800bh
-1337 3e30      ld      a,30h
-1339 77        ld      (hl),a
+;
+1334 210b80    ld      hl,800bh				; 10 Mhz and 1 MHz
+1337 3e30      ld      a,30h			
+1339 77        ld      (hl),a				; place 30h in 10 and 1 MHz memory locs
 133a 3e00      ld      a,00h
 133c 23        inc     hl
-133d 77        ld      (hl),a
+133d 77        ld      (hl),a				; place 00h in 100 kHz memory loc
 133e 23        inc     hl
-133f 77        ld      (hl),a
-1340 cd4f05    call    054fh				;
+133f 77        ld      (hl),a				; place 00h in 10 kHz and 1 kHz locs
+1340 cd4f05    call    054fh				; writes 800b-800d freq data to display
 1343 212b80    ld      hl,802bh
 1346 3e0a      ld      a,0ah
 1348 cdb513    call    13b5h				; (hl)=(8013)+b with bit6=0 and bit7=1
@@ -2532,7 +2546,7 @@
 1355 2826      jr      z,137dh
 1357 cd6d08    call    086dh				;
 135a cda707    call    07a7h				;
-135d cd4f05    call    054fh				;
+135d cd4f05    call    054fh				; writes 800b-800d freq data to display
 1360 3a0780    ld      a,(8007h)
 1363 fe00      cp      00h
 1365 200a      jr      nz,1371h
@@ -2564,7 +2578,7 @@
 13a1 1f        rra     
 13a2 3803      jr      c,13a7h
 13a4 110cc0    ld      de,0c00ch				; c00c battery backed RAM
-13a7 210b80    ld      hl,800bh
+13a7 210b80    ld      hl,800bh				; 10 Mhz and 1 MHz
 13aa 3e03      ld      a,03h
 13ac cdba08    call    08bah				;
 13af 3e00      ld      a,00h
@@ -2613,7 +2627,7 @@
 ;**********************************************************************************************
 ; called by 0862
 13ed 0611      ld      b,11h				
-13ef cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+13ef cdb10c    call    0cb1h				;  read hardware port 11h to a 
 13f2 cb57      bit     2,a
 13f4 2825      jr      z,141bh
 13f6 3a0280    ld      a,(8002h)
@@ -2626,7 +2640,7 @@
 1407 cbfe      set     7,(hl)
 1409 cde812    call    12e8h				;
 140c 0611      ld      b,11h
-140e cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+140e cdb10c    call    0cb1h				;  read hardware port 11h to a 
 1411 cb6f      bit     5,a
 1413 28f7      jr      z,140ch
 1415 cdbe02    call    02beh				;
@@ -2635,7 +2649,7 @@
 141e cb96      res     2,(hl)
 1420 7e        ld      a,(hl)
 1421 0613      ld      b,13h
-1423 cd5415    call    1554h				; write out xxh 13h to ports A and B
+1423 cd5415    call    1554h				; write a to I/O addr 13h
 1426 212680    ld      hl,8026h
 1429 cbbe      res     7,(hl)
 142b 211f80    ld      hl,801fh
@@ -2656,7 +2670,7 @@
 144f 211580    ld      hl,8015h
 1452 cb6e      bit     5,(hl)
 1454 280b      jr      z,1461h
-1456 cdf503    call    03f5h				; write out 00h 4dh to ports A and B - disable display
+1456 cdf503    call    03f5h				; write 00h to I/O addr 4dh - disable display
 1459 cd3407    call    0734h				;
 145c cde812    call    12e8h				;
 145f 182b      jr      148ch
@@ -2667,7 +2681,7 @@
 146b 3e1f      ld      a,1fh
 146d cdb513    call    13b5h				; (hl)=(8013)+b with bit6=0 and bit7=1
 1470 0612      ld      b,12h
-1472 cdb10c    call    0cb1h				; write 12h to port B, return with a = port A
+1472 cdb10c    call    0cb1h				;  read hardware port 12h to a 
 1475 cb4f      bit     1,a
 1477 2813      jr      z,148ch
 1479 3a2a80    ld      a,(802ah)
@@ -2675,11 +2689,11 @@
 147e 28f0      jr      z,1470h
 1480 cded14    call    14edh				;
 1483 0611      ld      b,11h
-1485 cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+1485 cdb10c    call    0cb1h				;  read hardware port 11h to a 
 1488 cb6f      bit     5,a
 148a 28f9      jr      z,1485h
 148c 0611      ld      b,11h
-148e cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+148e cdb10c    call    0cb1h				;  read hardware port 11h to a 
 1491 cb6f      bit     5,a
 1493 28ba      jr      z,144fh
 1495 cdbe02    call    02beh				;
@@ -2690,7 +2704,7 @@
 14a2 cb6e      bit     5,(hl)
 14a4 2009      jr      nz,14afh
 14a6 0611      ld      b,11h
-14a8 cdb10c    call    0cb1h				; write 11h to port B, return with a = port A
+14a8 cdb10c    call    0cb1h				;  read hardware port 11h to a
 14ab cb4f      bit     1,a
 14ad 20f7      jr      nz,14a6h
 14af cded14    call    14edh				;
@@ -2705,21 +2719,21 @@
 ; called from 13c3
 14c2 06b0      ld      b,0b0h				
 14c4 3e00      ld      a,00h
-14c6 cd5415    call    1554h				; write out 00h b0h to ports A B
+14c6 cd5415    call    1554h				; write 00h to I/O addr b0h
 14c9 3e10      ld      a,10h
-14cb cd5415    call    1554h				; write out 10h b0h to ports A B
+14cb cd5415    call    1554h				; write 10h to I/O addr b0h
 14ce 3e2b      ld      a,2bh
-14d0 cd5415    call    1554h				; write out 2bh b0h to ports A B
+14d0 cd5415    call    1554h				; write 2bh to I/O addr b0h
 14d3 3e36      ld      a,36h
-14d5 cd5415    call    1554h				; write out 36h b0h to ports A B
+14d5 cd5415    call    1554h				; write 36h to I/O addr b0h
 14d8 3e40      ld      a,40h
-14da cd5415    call    1554h				; write out 40h b0h to ports A B
+14da cd5415    call    1554h				; write 40h to I/O addr b0h
 14dd 3e50      ld      a,50h
-14df cd5415    call    1554h				; write out 50h b0h to ports A B
+14df cd5415    call    1554h				; write 50h to I/O addr b0h
 14e2 3e64      ld      a,64h
-14e4 cd5415    call    1554h				; write out 64h b0h to ports A B
+14e4 cd5415    call    1554h				; write 64h to I/O addr b0h
 14e7 3e70      ld      a,70h
-14e9 cd5415    call    1554h				; write out 70h b4h to ports A B
+14e9 cd5415    call    1554h				; write 70h to I/O addr b4h
 14ec c9        ret     
 ;**************************************************************************************
 ; called by 099c, 1027, 1480, 14af
@@ -2727,27 +2741,27 @@
 14f0 cb9e      res     3,(hl)
 14f2 7e        ld      a,(hl)
 14f3 0611      ld      b,11h
-14f5 cd5415    call    1554h				; write out xxh 11h to ports A and B
+14f5 cd5415    call    1554h				; write a to I/O addr 11h
 14f8 3e01      ld      a,01h
 14fa cdd507    call    07d5h				; delay 180h * a periods
 14fd cb96      res     2,(hl)
 14ff 7e        ld      a,(hl)
-1500 cd5415    call    1554h				; write out xxh 11h to ports A and B
+1500 cd5415    call    1554h				; write a to I/O addr 11h
 1503 3e01      ld      a,01h
 1505 cdd507    call    07d5h				; delay 180h * a periods
 1508 cb8e      res     1,(hl)
 150a 7e        ld      a,(hl)
-150b cd5415    call    1554h				; write out xxh 11h to ports A and B
+150b cd5415    call    1554h				; write a to I/O addr 11h
 150e 211780    ld      hl,8017h
 1511 cbae      res     5,(hl)
 1513 7e        ld      a,(hl)
 1514 0613      ld      b,13h
-1516 cd5415    call    1554h				; write out xxh 13h to ports A and B
+1516 cd5415    call    1554h				; write a to I/O addr 13h
 1519 211580    ld      hl,8015h
 151c cbee      set     5,(hl)
 151e 7e        ld      a,(hl)
 151f 0611      ld      b,11h
-1521 cd5415    call    1554h				; write out xxh 11h to ports A and B
+1521 cd5415    call    1554h				; write a to I/O addr 11h
 1524 210380    ld      hl,8003h
 1527 3e0d      ld      a,0dh
 1529 cdb513    call    13b5h				; (hl)=(8013)+b with bit6=0 and bit7=1
@@ -2755,18 +2769,22 @@
 ;**********************************************************************************************
 ; called from 1649, 1654, 1663, 166f, 1675, 1682, 1df1, 1df9, 1e01, 1e09, 1e16, 1e39, 1e5a, 1e7d, 1ea5
 ; 1ec5, 1eec, 1f0a, 17b8, 17cf, 17e6, 17ec, 17f3
+;
+; Write to LED display
+; inputs: a is number to display, b is location on display right to left
+;
 152d e5        push    hl					
 152e c5        push    bc
 152f f5        push    af
 1530 48        ld      c,b
 1531 0641      ld      b,41h
-1533 cdb10c    call    0cb1h				; write 41h to port B, return with a = port A
+1533 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
 1536 41        ld      b,c
-1537 cb6f      bit     5,a
-1539 2815      jr      z,1550h
+1537 cb6f      bit     5,a					; =!a.5
+1539 2815      jr      z,1550h				; exit if a.5 true returned from port B=41h
 153b 78        ld      a,b
 153c fe06      cp      06h
-153e 3010      jr      nc,1550h				; jump if a<6
+153e 3010      jr      nc,1550h				; exit if a<6
 1540 b7        or      a
 1541 280d      jr      z,1550h				; anything set in a?
 1543 3e4d      ld      a,4dh
@@ -2776,7 +2794,7 @@
 1548 f5        push    af					; restore a to original value
 1549 e60f      and     0fh					; strip high nybble from a
 154b f620      or      20h					; add in 20h as high nybble
-154d cd5415    call    1554h				; write out xxh xxh to ports A and B
+154d cd5415    call    1554h				; write a to I/O addr b
 1550 f1        pop     af
 1551 c1        pop     bc
 1552 e1        pop     hl
@@ -2794,7 +2812,18 @@
 ; 1d5b, 1d67, 1d8c, 1d98, 1da9, 1db5, 1f9b, 1fa2, 1fee, 1ffa, 2010, 2017, 201e, 2028, 202f, 2070, 
 ; 210b, 2145, 2151, 215d, 2304, 232b, 0fac, 2352
 ;
+; External I/O write a to addr b
 ; writes reg a to port A, reg b to port B, and toggles bit 0 of port C
+;
+; CPU card pins:
+; 1x   10
+; 2x   28
+; 3x   30
+; 4x   50
+; 5x   32
+; 8x   18
+; ax   64
+; bx   36
 ;
 1554 c5        push    bc					
 1555 f5        push    af
@@ -2833,7 +2862,7 @@
 1590 3a1480    ld      a,(8014h)
 1593 e6f0      and     0f0h
 1595 0610      ld      b,10h
-1597 cd5415    call    1554h				; write out xxh 10h to ports A and B
+1597 cd5415    call    1554h				; write (8014) high nybble to I/O addr 10h 
 159a 3e04      ld      a,04h
 159c 328e80    ld      (808eh),a			; bit set port C
 159f 0650      ld      b,50h
@@ -2841,9 +2870,9 @@
 15a3 328a80    ld      (808ah),a			; bit clear port C
 15a6 3a1480    ld      a,(8014h)
 15a9 0610      ld      b,10h
-15ab cd5415    call    1554h				; write out (8014h) 10h to ports A and B
+15ab cd5415    call    1554h				; write (8014h) to I/O addr 10h
 15ae 06a0      ld      b,0a0h
-15b0 cd5415    call    1554h				; write out (8014h) a0h to ports A and B
+15b0 cd5415    call    1554h				; write (8014h) to I/O addr a0h
 15b3 f1        pop     af
 15b4 c1        pop     bc
 15b5 c9        ret     
@@ -2882,15 +2911,15 @@
 15d6 cdb91d    call    1db9h				;
 15d9 cdeb1a    call    1aebh				;
 15dc cdf717    call    17f7h				;
-15df cd4f17    call    174fh				;
-15e2 cdb91b    call    1bb9h				; displays 6 6 6 if no encryption cards?
-15e5 cd131c    call    1c13h				;
-15e8 cd921c    call    1c92h				;
-15eb cd3818    call    1838h				;
-15ee cd151f    call    1f15h				;
-15f1 cdb221    call    21b2h				;
+15df cd4f17    call    174fh				; write out 04h a0h to ports A and B
+15e2 cdb91b    call    1bb9h				; display 6 6 6
+15e5 cd131c    call    1c13h				; writes
+15e8 cd921c    call    1c92h				; writes and start timer
+15eb cd3818    call    1838h				; set 8026.6 based on port C.2
+15ee cd151f    call    1f15h				; possible 1 04 error message
+15f1 cdb221    call    21b2h				; possible 2 series error messages
 15f4 cdac22    call    22ach				;
-15f7 c39e16    jp      169eh				;
+15f7 c39e16    jp      169eh				; display 88888
 
 ;******************************************************************************
 ; from 1ae8, 1bb5, 1d9f, 20df, 20ed, 2100, 2121, 213b, 229f
@@ -2924,7 +2953,7 @@
 162f 3e0a      ld      a,0ah				
 1631 cddd01    call    01ddh				; delay 10 periods
 1634 0643      ld      b,43h
-1636 cdb10c    call    0cb1h				; write 43h to port B, return with a = port A
+1636 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
 1639 cb4f      bit     1,a
 163b ca4516    jp      z,1645h
 163e cb47      bit     0,a
@@ -2933,13 +2962,13 @@
 1644 c9        ret    
 1645 0605      ld      b,05h
 1647 3e0a      ld      a,0ah
-1649 cd2d15    call    152dh				;
+1649 cd2d15    call    152dh				; display blank pos 1
 164c 10fb      djnz    1649h
 164e d5        push    de
 164f 7a        ld      a,d
 1650 e607      and     07h
 1652 0601      ld      b,01h
-1654 cd2d15    call    152dh				;
+1654 cd2d15    call    152dh				; display a pos 5
 1657 7a        ld      a,d
 1658 cb3f      srl     a
 165a cb3f      srl     a
@@ -2947,65 +2976,63 @@
 165e 57        ld      d,a
 165f e607      and     07h
 1661 0602      ld      b,02h
-1663 cd2d15    call    152dh				;
+1663 cd2d15    call    152dh				; display a pos 4
 1666 7a        ld      a,d
 1667 cb3f      srl     a
 1669 cb3f      srl     a
 166b cb3f      srl     a
 166d 0603      ld      b,03h
-166f cd2d15    call    152dh				;
+166f cd2d15    call    152dh				; display a pos 3
 1672 7b        ld      a,e
 1673 0604      ld      b,04h
-1675 cd2d15    call    152dh				;
+1675 cd2d15    call    152dh				; display a pos 2
 1678 cb3f      srl     a
 167a cb3f      srl     a
 167c cb3f      srl     a
 167e cb3f      srl     a
 1680 0605      ld      b,05h
-1682 cd2d15    call    152dh				;
+1682 cd2d15    call    152dh				; display a pos 1
 1685 3e14      ld      a,14h
 1687 cddd01    call    01ddh				; delay 20 periods
 168a d1        pop     de
 168b cd5f17    call    175fh				;
 168e 0643      ld      b,43h
-1690 cdb10c    call    0cb1h				; write 43h to port B, return with a = port A
+1690 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
 1693 cb5f      bit     3,a
 1695 cc9521    call    z,2195h				;
 1698 cb4f      bit     1,a
 169a c28e16    jp      nz,168eh
 169d c9        ret   
 ;******************************************************************************************  
-; called from 15f7 table
+; called from 15f7 table, display 88888
 169e 3e00      ld      a,00h				
-16a0 328780    ld      (8087h),a			; set port mode definition
-16a3 328480    ld      (8084h),a			; set DDR A to all inputs
+16a0 328780    ld      (8087h),a			; set port mode definition, standard I/O
+16a3 328480    ld      (8084h),a			; set Port A to all inputs
 16a6 328180    ld      (8081h),a			; write 00h to port B
 16a9 3eff      ld      a,0ffh
-16ab 328580    ld      (8085h),a			; set DDR B to all outputs
+16ab 328580    ld      (8085h),a			; set Port B to all outputs
 16ae 328280    ld      (8082h),a			; write ffh to port C
 16b1 3e27      ld      a,27h
-16b3 328680    ld      (8086h),a			; set DDR C port direction
-16b6 21d416    ld      hl,16d4h
+16b3 328680    ld      (8086h),a			; set Port C port direction 00100111
+16b6 21d416    ld      hl,16d4h				; 88888
 16b9 0605      ld      b,05h
 16bb 7e        ld      a,(hl)
-16bc cd2d15    call    152dh				; restart CPU?  why a call not a jump?
+16bc cd2d15    call    152dh				; display (hl) pos 1
 16bf 23        inc     hl
-16c0 10f9      djnz    16bbh
+16c0 10f9      djnz    16bbh				; step through display positions
 16c2 3e05      ld      a,05h
 16c4 cddd01    call    01ddh				; delay 5 periods
 16c7 0643      ld      b,43h
-16c9 cdb10c    call    0cb1h				; write 43h to port B, return with a = port A
-16cc cb5f      bit     3,a
-16ce cc9521    call    z,2195h				;
+16c9 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
+16cc cb5f      bit     3,a					; z=!a.3
+16ce cc9521    call    z,2195h				; call if a.3=0
 16d1 c3db16    jp      16dbh
 
-16d4 2828      jr      z,16feh
-16d6 2828      jr      z,1700h
-16d8 28
+16d4           db      028h, 028h, 028h, 028h, 028h			;88888	lamp test?
 
 16d9 e1        pop     hl					; from 1640
 16da e1        pop     hl
-16db cdf001    call    01f0h				;
+16db cdf001    call    01f0h				;; blank display
 16de c38300    jp      0083h				;
 ;*************************************************************************************
 ; called from 1c2d, 1c44, 1c74, 1f20, 1f52, 1f6b, 1f88, 1fad, 1fdb, 2041, 2082, 20a0, 20be
@@ -3024,25 +3051,25 @@
 16ec d5        push    de
 16ed 50        ld      d,b
 16ee 0613      ld      b,13h
-16f0 cdb10c    call    0cb1h				; write 13h to port B, return with a = port A
+16f0 cdb10c    call    0cb1h				; read hardware port 13h to a 
 16f3 7a        ld      a,d
-16f4 328180    ld      (8081h),a			; write to port B
+16f4 328180    ld      (8081h),a			; write d to port B
 16f7 3e02      ld      a,02h
 16f9 cdd507    call    07d5h				; delay 180h * a periods
 16fc 3e04      ld      a,04h
-16fe d3bb      out     (0bbh),a
+16fe d3bb      out     (0bbh),a				; write 04h to device 0bbh
 1700 3e02      ld      a,02h
-1702 328a80    ld      (808ah),a			; bit clear port C
-1705 328e80    ld      (808eh),a			; bit set port C
+1702 328a80    ld      (808ah),a			; bit clear 02h port C
+1705 328e80    ld      (808eh),a			; bit set 02h port C
 1708 0640      ld      b,40h
-170a 10fe      djnz    170ah
+170a 10fe      djnz    170ah				; delay
 170c 0613      ld      b,13h
-170e cdb10c    call    0cb1h				; write 13h to port B, return with a = port A
+170e cdb10c    call    0cb1h				; read hardware port 13h to a 
 1711 47        ld      b,a
 1712 7a        ld      a,d
 1713 328180    ld      (8081h),a			; write to port B
 1716 3e80      ld      a,80h
-1718 d3bb      out     (0bbh),a
+1718 d3bb      out     (0bbh),a				; write 80h to device 0bbh
 171a 78        ld      a,b
 171b d1        pop     de
 171c c1        pop     bc
@@ -3054,6 +3081,9 @@
 ;************************************************************************************
 ; called from 1bd1, 1bea, 1c30, 1c47, 1c59, 1c77, 1f23, 1f5b, 1f74, 1f8b, 1fb0,
 ; 1fc7, 1fd0, 2044, 205d, 2085, 20a3, 20c1, 2246, 22c6, 22e6, 230d, 2334
+;
+;
+;
 1722 c5        push    bc					
 1723 cdeb16    call    16ebh				;
 1726 47        ld      b,a
@@ -3069,7 +3099,7 @@
 ; 22a8, 22b6, 22bd, 22d6, 22dd, 22f6, 22fd, 231d, 2324, 2375, 2294
 1730 c5        push    bc					
 1731 0610      ld      b,10h
-1733 cd5415    call    1554h				; write out xxh 10h to ports A and B
+1733 cd5415    call    1554h				; write a to I/O addr 10h
 1736 3e04      ld      a,04h
 1738 328e80    ld      (808eh),a			; bit set 04h port C
 173b 0650      ld      b,50h
@@ -3077,9 +3107,9 @@
 173f 328a80    ld      (808ah),a			; bit clear 04h port C
 1742 0610      ld      b,10h
 1744 79        ld      a,c
-1745 cd5415    call    1554h				; write out xxh 10h to ports A and B
+1745 cd5415    call    1554h				; write a to I/O addr 10h
 1748 06a0      ld      b,0a0h
-174a cd5415    call    1554h				; write out xxh a0h to ports A and B
+174a cd5415    call    1554h				; write a to I/O addr a0h  
 174d c1        pop     bc
 174e c9        ret     
 ;**************************************************************************************
@@ -3087,7 +3117,7 @@
 174f 3e04      ld      a,04h				
 1751 328e80    ld      (808eh),a			; bit set port C
 1754 06a0      ld      b,0a0h
-1756 cd5415    call    1554h				; write out 04h a0h to ports A and B
+1756 cd5415    call    1554h				; write 04h to I/O addr a0h 
 1759 3e04      ld      a,04h
 175b 328a80    ld      (808ah),a			; bit clear port C
 175e c9        ret     
@@ -3140,7 +3170,7 @@
 17b4 19        add     hl,de
 17b5 79        ld      a,c
 17b6 0604      ld      b,04h
-17b8 cd2d15    call    152dh				;
+17b8 cd2d15    call    152dh				; display a pos 2
 17bb 116400    ld      de,0064h
 17be 0e00      ld      c,00h
 17c0 37        scf     
@@ -3152,7 +3182,7 @@
 17cb 19        add     hl,de
 17cc 79        ld      a,c
 17cd 0603      ld      b,03h
-17cf cd2d15    call    152dh				;
+17cf cd2d15    call    152dh				; display a pos 3
 17d2 110a00    ld      de,000ah
 17d5 0e00      ld      c,00h
 17d7 37        scf     
@@ -3164,61 +3194,63 @@
 17e2 19        add     hl,de
 17e3 79        ld      a,c
 17e4 0602      ld      b,02h
-17e6 cd2d15    call    152dh				;
+17e6 cd2d15    call    152dh				; display a pos 4
 17e9 7d        ld      a,l
 17ea 0601      ld      b,01h
-17ec cd2d15    call    152dh				;
+17ec cd2d15    call    152dh				; display a pos 5
 17ef 3e0a      ld      a,0ah
 17f1 0605      ld      b,05h
-17f3 cd2d15    call    152dh				;
+17f3 cd2d15    call    152dh				; display blank pos 1
 17f6 c9        ret     
 ;*************************************************************************************
 ; called from 15dc table
 17f7 3e00      ld      a,00h				
 17f9 0610      ld      b,10h
-17fb cd5415    call    1554h				; write out 00h 10h to ports A and B
+17fb cd5415    call    1554h				; write 00h to I/O addr 10h
 17fe 3e21      ld      a,21h
 1800 0611      ld      b,11h
-1802 cd5415    call    1554h				; write out 21h 11h to ports A and B
+1802 cd5415    call    1554h				; write 21h to I/O addr 11h 
 1805 321580    ld      (8015h),a
 1808 3e30      ld      a,30h
 180a 0612      ld      b,12h
-180c cd5415    call    1554h				; write out 30h 12h to ports A and B
+180c cd5415    call    1554h				; write 30h to I/O addr 12h
 180f 321680    ld      (8016h),a
 1812 3e00      ld      a,00h
 1814 0680      ld      b,80h
-1816 cd5415    call    1554h				; write out 00h 80h to ports A and B
+1816 cd5415    call    1554h				; write 00h to I/O addr 80h
 1819 3e01      ld      a,01h
 181b cddd01    call    01ddh				; delay 1 period
 181e 3e12      ld      a,12h
 1820 0613      ld      b,13h
-1822 cd5415    call    1554h				; write out 12h 13h to ports A and B
+1822 cd5415    call    1554h				; write 12h to I/O addr 13h 
 1825 321780    ld      (8017h),a
 1828 3e01      ld      a,01h
 182a cddd01    call    01ddh				; delay 1 period
 182d 3e02      ld      a,02h
 182f 0613      ld      b,13h
-1831 cd5415    call    1554h				; write out 02h 13h to ports A and B
+1831 cd5415    call    1554h				; write 02h to I/O addr 13h 
 1834 321780    ld      (8017h),a
 1837 c9        ret     
 ;***************************************************************************************
 ; called from 15eb table
+; set 8026.6 based on port C.2
+;
 1838 3e00      ld      a,00h				
-183a 328680    ld      (8086h),a			; set DDR C port direction
+183a 328680    ld      (8086h),a			; set DDR C port direction to input
 183d 3e02      ld      a,02h
 183f cdd507    call    07d5h				; delay 180h * a periods
-1842 3a8280    ld      a,(8082h)			; write to port C
+1842 3a8280    ld      a,(8082h)			; get port C
 1845 47        ld      b,a
 1846 3e27      ld      a,27h
-1848 328680    ld      (8086h),a			; set DDR C port direction
-184b 78        ld      a,b
+1848 328680    ld      (8086h),a			; set DDR C port direction to 00100111
+184b 78        ld      a,b					; prev port C read
 184c e604      and     04h
 184e ca5918    jp      z,1859h
 1851 3e00      ld      a,00h
-1853 322680    ld      (8026h),a
+1853 322680    ld      (8026h),a			; set 8026h to 00h
 1856 c35e18    jp      185eh
 1859 3e40      ld      a,40h
-185b 322680    ld      (8026h),a
+185b 322680    ld      (8026h),a			; set 8026h to 40h
 185e c9        ret     
 ;*****************************************************************************************
 ; Startup, POST part 1, processor register tests
@@ -3599,7 +3631,7 @@
 1b4d 328680    ld      (8086h),a			; set DDR C port direction
 1b50 328280    ld      (8082h),a			; write ffh to port C
 1b53 0613      ld      b,13h
-1b55 cdb10c    call    0cb1h				; write 13h to port B, return with a = port A
+1b55 cdb10c    call    0cb1h				; read hardware port 13h to a 
 1b58 3e04      ld      a,04h
 1b5a d3bb      out     (0bbh),a
 1b5c dd21771b  ld      ix,1b77h
@@ -3623,7 +3655,7 @@
 1b84 3e04      ld      a,04h
 1b86 c3961b    jp      1b96h
 1b89 0613      ld      b,13h
-1b8b cdb10c    call    0cb1h				; write 13h to port B, return with a = port A
+1b8b cdb10c    call    0cb1h				; read hardware port 13h to a 
 1b8e dd21771b  ld      ix,1b77h
 1b92 fb        ei      
 1b93 c3a51b    jp      1ba5h
@@ -3632,7 +3664,7 @@
 1b98 3e00      ld      a,00h
 1b9a d3bb      out     (0bbh),a
 1b9c 0613      ld      b,13h
-1b9e cdb10c    call    0cb1h				; write 13h to port B, return with a = port A
+1b9e cdb10c    call    0cb1h				; read hardware port 13h to a 
 1ba1 7b        ld      a,e
 1ba2 cdb21b    call    1bb2h				; display 1 06 message
 1ba5 f3        di      
@@ -3652,9 +3684,9 @@
 1bbb d3bb      out     (0bbh),a
 1bbd dd211f17  ld      ix,171fh
 1bc1 3eff      ld      a,0ffh
-1bc3 328580    ld      (8085h),a			; set DDR B to all outputs
+1bc3 328580    ld      (8085h),a			; set port B as output
 1bc6 3e27      ld      a,27h
-1bc8 328680    ld      (8086h),a			; set DDR C port direction
+1bc8 328680    ld      (8086h),a			; set DDR C port direction 00100111
 1bcb 0625      ld      b,25h
 1bcd 16ff      ld      d,0ffh
 1bcf 1e6b      ld      e,6bh
@@ -3665,7 +3697,7 @@
 1bda cd051c    call    1c05h				; display 6 6 6
 1bdd 3e11      ld      a,11h
 1bdf 0611      ld      b,11h
-1be1 cd5415    call    1554h				; write out 11h 11h to ports A and B
+1be1 cd5415    call    1554h				; write 11h to I/O addr 11h 
 1be4 0600      ld      b,00h
 1be6 16ff      ld      d,0ffh
 1be8 1e78      ld      e,78h
@@ -3674,7 +3706,7 @@
 1bf0 57        ld      d,a
 1bf1 3e01      ld      a,01h
 1bf3 0611      ld      b,11h
-1bf5 cd5415    call    1554h				; write out 01h 11h to ports A and B
+1bf5 cd5415    call    1554h				; write 01h to I/O addr 11h 
 1bf8 3e28      ld      a,28h
 1bfa cd051c    call    1c05h				; display 6 6 6
 1bfd c30b1c    jp      1c0bh
@@ -3683,14 +3715,14 @@
 
 ;***********************************************************************************************
 ; called by 1bda, 1bfa
-1c05 21        ld      hl,1c00h				; display message 6 6 6, does this when no encryption cards present
+1c05 21        ld      hl,1c00h				; display message 6 6 6
 1c06 00        nop     
 1c07 1c        inc     e
 1c08 c3fa15    jp      15fah
 
 1c0b 3e01      ld      a,01h
 1c0d 0611      ld      b,11h
-1c0f cd5415    call    1554h				; write out 01h 11h to ports A and B
+1c0f cd5415    call    1554h				; write 01h to I/O addr 11h
 1c12 c9        ret     
 ;***********************************************************************************************
 ; called from 15e5 table
@@ -3705,7 +3737,7 @@
 1c27 16db      ld      d,0dbh
 1c29 1e80      ld      e,80h
 1c2b 3e02      ld      a,02h
-1c2d cde116    call    16e1h				; write b to port B, delay a, return
+1c2d cde116    call    16e1h				; write 3eh to port B, delay a, return
 1c30 cd2217    call    1722h				;
 1c33 d23c1c    jp      nc,1c3ch
 1c36 57        ld      d,a
@@ -3715,7 +3747,7 @@
 1c3e 16e3      ld      d,0e3h
 1c40 1e81      ld      e,81h
 1c42 3e04      ld      a,04h
-1c44 cde116    call    16e1h				; write b to port B, delay a, return
+1c44 cde116    call    16e1h				; write 3dh to port B, delay a, return
 1c47 cd2217    call    1722h				;
 1c4a d2531c    jp      nc,1c53h
 1c4d 57        ld      d,a
@@ -3731,7 +3763,7 @@
 1c62 cd8b1c    call    1c8bh				;
 1c65 3e21      ld      a,21h
 1c67 0611      ld      b,11h
-1c69 cd5415    call    1554h				; write out 21h 11h to ports A and B
+1c69 cd5415    call    1554h				; write 21h to I/O addr 11h 
 1c6c 063f      ld      b,3fh
 1c6e 16d1      ld      d,0d1h
 1c70 1e82      ld      e,82h
@@ -3744,7 +3776,7 @@
 1c80 cd8b1c    call    1c8bh				;
 1c83 c3911c    jp      1c91h
 
-1c86 212a20    ld      hl,202ah				; data
+1c86 212a20    ld      hl,202ah				; 
 1c89 29        add     hl,hl
 1c8a 2a
 ;***************************************************************************************
@@ -3760,15 +3792,15 @@
 1c93 d3bb      out     (0bbh),a
 1c95 3e14      ld      a,14h
 1c97 0680      ld      b,80h
-1c99 cd5415    call    1554h				; write out 14h 80h to ports A and B
+1c99 cd5415    call    1554h				; write 14h to I/O addr 80h 
 1c9c 3e01      ld      a,01h
 1c9e cdd507    call    07d5h				; delay 180h * a periods
 1ca1 3e00      ld      a,00h
 1ca3 0680      ld      b,80h
-1ca5 cd5415    call    1554h				; write out 00h 80h to ports A and B
+1ca5 cd5415    call    1554h				; write 00h to I/O addr 80h 
 1ca8 3e21      ld      a,21h
 1caa 0611      ld      b,11h
-1cac cd5415    call    1554h				; write out 21h 11h to ports A and B
+1cac cd5415    call    1554h				; write 21h to I/O addr 11h
 1caf 3e00      ld      a,00h
 1cb1 329880    ld      (8098h),a			; set timer 0 mode
 1cb4 3e05      ld      a,05h
@@ -3784,7 +3816,7 @@
 ; called from 1cc6, 1d54
 1ccc 216602    ld      hl,0266h				
 1ccf 0612      ld      b,12h
-1cd1 cdb10c    call    0cb1h				; write 12h to port B, return with a = port A
+1cd1 cdb10c    call    0cb1h				; read hardware port 12h to a 
 1cd4 cb47      bit     0,a
 1cd6 c2e51c    jp      nz,1ce5h
 1cd9 2b        dec     hl
@@ -3796,15 +3828,15 @@
 1ce2 c3a21d    jp      1da2h				; display 1 07 message
 1ce5 3e0d      ld      a,0dh
 1ce7 0680      ld      b,80h
-1ce9 cd5415    call    1554h				; write out 0dh 80h to ports A and B
+1ce9 cd5415    call    1554h				; write 0dh to I/O addr 80h
 1cec 3e01      ld      a,01h
 1cee cdd507    call    07d5h				; delay 180h * a periods
 1cf1 3e01      ld      a,01h
 1cf3 0680      ld      b,80h
-1cf5 cd5415    call    1554h				; write out 01h 80h to ports A and B
+1cf5 cd5415    call    1554h				; write 01h to I/O addr 80h
 1cf8 26ff      ld      h,0ffh
 1cfa 0612      ld      b,12h
-1cfc cdb10c    call    0cb1h				; write 12h to port B, return with a = port A
+1cfc cdb10c    call    0cb1h				; read hardware port 12h to a 
 1cff cb47      bit     0,a
 1d01 c8        ret     z
 1d02 25        dec     h
@@ -3816,10 +3848,10 @@
 1d0b c3a21d    jp      1da2h				; display 1 07 message
 1d0e 3e00      ld      a,00h
 1d10 0680      ld      b,80h
-1d12 cd5415    call    1554h				; write out 00h 80h to ports A and B
+1d12 cd5415    call    1554h				; write 00h to I/O addr 80h
 1d15 216602    ld      hl,0266h
 1d18 0612      ld      b,12h
-1d1a cdb10c    call    0cb1h				; write 12h to port B, return with a = port A
+1d1a cdb10c    call    0cb1h				; read hardware port 12h to a 
 1d1d cb47      bit     0,a
 1d1f c22d1d    jp      nz,1d2dh
 1d22 2b        dec     hl
@@ -3830,16 +3862,16 @@
 1d2a c3a21d    jp      1da2h				; display 1 07 message
 1d2d 3e0b      ld      a,0bh
 1d2f 0680      ld      b,80h
-1d31 cd5415    call    1554h				; write out 0bh 80h to ports A and B
+1d31 cd5415    call    1554h				; write 0bh to I/O addr 80h
 1d34 3e01      ld      a,01h
 1d36 cdd507    call    07d5h				; delay 180h * a periods
 1d39 3e01      ld      a,01h
 1d3b 0680      ld      b,80h
-1d3d cd5415    call    1554h				; write out 01h 80h to ports A and B
+1d3d cd5415    call    1554h				; write 01h to I/O addr 80h
 1d40 3e20      ld      a,20h
 1d42 cdd507    call    07d5h				; delay 180h * a periods
 1d45 0612      ld      b,12h
-1d47 cdb10c    call    0cb1h				; write 12h to port B, return with a = port A
+1d47 cdb10c    call    0cb1h				; read hardware port 12h to a 
 1d4a cb47      bit     0,a
 1d4c c2541d    jp      nz,1d54h
 1d4f 3e04      ld      a,04h
@@ -3847,15 +3879,15 @@
 1d54 cdcc1c    call    1ccch				;
 1d57 3e10      ld      a,10h
 1d59 0680      ld      b,80h
-1d5b cd5415    call    1554h				; write out 10h 80h to ports A and B
+1d5b cd5415    call    1554h				; write 10h to I/O addr 80h
 1d5e 3e01      ld      a,01h
 1d60 cdd507    call    07d5h				; delay 180h * a periods
 1d63 3e00      ld      a,00h
 1d65 0680      ld      b,80h
-1d67 cd5415    call    1554h				; write out 00h 80h to ports A and B
+1d67 cd5415    call    1554h				; write 00h to I/O addr 80h
 1d6a 216602    ld      hl,0266h
 1d6d 0612      ld      b,12h
-1d6f cdb10c    call    0cb1h				; write 12h to port B, return with a = port A
+1d6f cdb10c    call    0cb1h				; read hardware port 12h to a 
 1d72 cb47      bit     0,a
 1d74 c2a51d    jp      nz,1da5h
 1d77 2b        dec     hl
@@ -3871,12 +3903,12 @@
 1d87 f5		   push    af					
 1d88 3e14      ld      a,14h
 1d8a 0680      ld      b,80h
-1d8c cd5415    call    1554h				; write out 14h 80h to ports A and B
+1d8c cd5415    call    1554h				; write 14h to I/O addr 80h
 1d8f 3e01      ld      a,01h
 1d91 cdd507    call    07d5h				; delay 180h * a periods
 1d94 3e00      ld      a,00h
 1d96 0680      ld      b,80h
-1d98 cd5415    call    1554h				; write out 00h 80h to ports A and B
+1d98 cd5415    call    1554h				; write 00h to I/O addr 80h
 1d9b f1        pop     af
 1d9c 21821d    ld      hl,1d82h
 1d9f c3fa15    jp      15fah				; display 1 07 message
@@ -3885,12 +3917,12 @@
 1da2 cd871d    call    1d87h				;
 1da5 3e14      ld      a,14h
 1da7 0680      ld      b,80h
-1da9 cd5415    call    1554h				; write out 14h 80h to ports A and B
+1da9 cd5415    call    1554h				; write 14h to I/O addr 80h
 1dac 3e01      ld      a,01h
 1dae cdd507    call    07d5h				; delay 180h * a periods
 1db1 3e00      ld      a,00h
 1db3 0680      ld      b,80h
-1db5 cd5415    call    1554h				; write out 00h 80h to ports A and B
+1db5 cd5415    call    1554h				; write 00h to I/O addr 80h
 1db8 c9        ret     
 
 ;*******************************************************************************
@@ -3905,7 +3937,7 @@
 1dcc 3e27      ld      a,27h
 1dce 328680    ld      (8086h),a			; set DDR C port direction 00100111
 1dd1 0643      ld      b,43h
-1dd3 cdb10c    call    0cb1h				; write 43h to port B, return with a = port A
+1dd3 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
 1dd6 cb5f      bit     3,a
 1dd8 c0        ret     nz					; return if bit 3 true
 1dd9 210000    ld      hl,0000h
@@ -3921,22 +3953,22 @@
 1dec 7d        ld      a,l
 1ded e607      and     07h
 1def 0601      ld      b,01h
-1df1 cd2d15    call    152dh				;
+1df1 cd2d15    call    152dh				; display a pos 5
 1df4 cd211e    call    1e21h				;
 1df7 0602      ld      b,02h
-1df9 cd2d15    call    152dh				;
+1df9 cd2d15    call    152dh				; display a pos 4
 1dfc cd211e    call    1e21h				;
 1dff 0603      ld      b,03h
-1e01 cd2d15    call    152dh				;
+1e01 cd2d15    call    152dh				; display a pos 3
 1e04 cd211e    call    1e21h				;
 1e07 0604      ld      b,04h
-1e09 cd2d15    call    152dh				;
+1e09 cd2d15    call    152dh				; display a pos 2
 1e0c cd211e    call    1e21h				;
 1e0f 47        ld      b,a
 1e10 cd211e    call    1e21h				;
 1e13 80        add     a,b
 1e14 0605      ld      b,05h
-1e16 cd2d15    call    152dh				;
+1e16 cd2d15    call    152dh				; display a pos 1
 1e19 3e14      ld      a,14h
 1e1b cddd01    call    01ddh				; delay 20 periods
 1e1e c3311e    jp      1e31h
@@ -3957,7 +3989,7 @@
 1e32 cd561e    call    1e56h				;
 1e35 0601      ld      b,01h
 1e37 3e20      ld      a,20h
-1e39 cd2d15    call    152dh				;
+1e39 cd2d15    call    152dh				; display 0 pos 5
 1e3c f5        push    af
 1e3d 3e02      ld      a,02h
 1e3f cddd01    call    01ddh				; delay 2 periods
@@ -3975,13 +4007,13 @@
 ; called from 1e32, 1e50
 1e56 0605      ld      b,05h				
 1e58 3e2a      ld      a,2ah
-1e5a cd2d15    call    152dh				;
+1e5a cd2d15    call    152dh				; display blank pos 1
 1e5d 10fb      djnz    1e5ah
 1e5f c9        ret     
 ;**************************************************************************
 ; continuation from above
 1e60 0642      ld      b,42h				
-1e62 cdb10c    call    0cb1h				; write 42h to port B, return with a = port A
+1e62 cdb10c    call    0cb1h				; read hardware port 42h to a (front panel)
 1e65 0e20      ld      c,20h
 1e67 e63f      and     3fh
 1e69 fe3f      cp      3fh
@@ -3994,9 +4026,9 @@
 1e77 c3701e    jp      1e70h
 1e7a 79        ld      a,c
 1e7b 0601      ld      b,01h
-1e7d cd2d15    call    152dh				;
+1e7d cd2d15    call    152dh				; display a pos 5
 1e80 0641      ld      b,41h
-1e82 cdb10c    call    0cb1h				; write 41h to port B, return with a = port A
+1e82 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
 1e85 0e20      ld      c,20h
 1e87 47        ld      b,a
 1e88 e60f      and     0fh
@@ -4014,9 +4046,9 @@
 1ea1 0c        inc     c
 1ea2 79        ld      a,c
 1ea3 0602      ld      b,02h
-1ea5 cd2d15    call    152dh				;
+1ea5 cd2d15    call    152dh				; display a pos 4
 1ea8 0643      ld      b,43h
-1eaa cdb10c    call    0cb1h				; write 43h to port B, return with a = port A
+1eaa cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
 1ead 0e20      ld      c,20h
 1eaf e60f      and     0fh
 1eb1 fe0f      cp      0fh
@@ -4029,9 +4061,9 @@
 1ebf c3b81e    jp      1eb8h
 1ec2 79        ld      a,c
 1ec3 0603      ld      b,03h
-1ec5 cd2d15    call    152dh				;
+1ec5 cd2d15    call    152dh				; display a pos 3
 1ec8 0640      ld      b,40h
-1eca cdb10c    call    0cb1h				; write 40h to port B, return with a = port A
+1eca cdb10c    call    0cb1h				; read hardware port 40h to a (front panel)
 1ecd 0e20      ld      c,20h
 1ecf 47        ld      b,a
 1ed0 e61f      and     1fh
@@ -4049,21 +4081,21 @@
 1ee8 0c        inc     c
 1ee9 79        ld      a,c
 1eea 0604      ld      b,04h
-1eec cd2d15    call    152dh				;
+1eec cd2d15    call    152dh				; display a pos 2
 1eef 0e20      ld      c,20h
 1ef1 0641      ld      b,41h
-1ef3 cdb10c    call    0cb1h				; write 41h to port B, return with a = port A
+1ef3 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
 1ef6 cb6f      bit     5,a
 1ef8 c2fc1e    jp      nz,1efch
 1efb 0c        inc     c
 1efc 0643      ld      b,43h
-1efe cdb10c    call    0cb1h				; write 43h to port B, return with a = port A
+1efe cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
 1f01 cb67      bit     4,a
 1f03 c2071f    jp      nz,1f07h
 1f06 0c        inc     c
 1f07 79        ld      a,c
 1f08 0605      ld      b,05h
-1f0a cd2d15    call    152dh				;
+1f0a cd2d15    call    152dh				; display a pos 1
 1f0d 3e02      ld      a,02h
 1f0f cddd01    call    01ddh				; delay 2 periods
 1f12 c3601e    jp      1e60h
@@ -4074,7 +4106,7 @@
 1f1a 16bb      ld      d,0bbh
 1f1c 1e99      ld      e,99h
 1f1e 3e04      ld      a,04h
-1f20 cde116    call    16e1h				; write b to port B, delay a, return
+1f20 cde116    call    16e1h				; write 50h to port B, delay a, return
 1f23 cd2217    call    1722h				;
 1f26 d22f1f    jp      nc,1f2fh
 1f29 57        ld      d,a
@@ -4084,13 +4116,13 @@
 1f30 7e        ld      a,(hl)
 1f31 feff      cp      0ffh
 1f33 ca6121    jp      z,2161h				;
-1f36 320b80    ld      (800bh),a
+1f36 320b80    ld      (800bh),a			; 10 Mhz and 1 MHz
 1f39 23        inc     hl
 1f3a 7e        ld      a,(hl)
-1f3b 320c80    ld      (800ch),a
+1f3b 320c80    ld      (800ch),a			; 100 kHz
 1f3e 23        inc     hl
 1f3f 7e        ld      a,(hl)
-1f40 320d80    ld      (800dh),a
+1f40 320d80    ld      (800dh),a			; 10 kHz and 1 kHz
 1f43 23        inc     hl
 1f44 e5        push    hl
 1f45 cdc013    call    13c0h				;
@@ -4131,10 +4163,10 @@
 1f94 cde520    call    20e5h				; ...display 1 02 message (a=1)
 1f97 3e01      ld      a,01h
 1f99 0621      ld      b,21h
-1f9b cd5415    call    1554h				; write out 01h 21h to ports A and B
+1f9b cd5415    call    1554h				; write 01h to I/O addr 21h
 1f9e 3e07      ld      a,07h
 1fa0 0611      ld      b,11h
-1fa2 cd5415    call    1554h				; write out 07h 11h to ports A and B
+1fa2 cd5415    call    1554h				; write 07h to I/O addr 11h
 1fa5 06b2      ld      b,0b2h
 1fa7 16ff      ld      d,0ffh
 1fa9 1e19      ld      e,19h
@@ -4167,12 +4199,12 @@
 1fe7 cdf320    call    20f3h				; ...display 1 11 message (a=3)
 1fea 3e03      ld      a,03h
 1fec 0611      ld      b,11h
-1fee cd5415    call    1554h				; write out 03h 11h to ports A and B
+1fee cd5415    call    1554h				; write 03h to I/O addr 11h
 1ff1 3e01      ld      a,01h
 1ff3 cdd507    call    07d5h				; delay 180h * a periods
 1ff6 3e01      ld      a,01h
 1ff8 0611      ld      b,11h
-1ffa cd5415    call    1554h				; write out 01h 11h to ports A and B
+1ffa cd5415    call    1554h				; write 01h to I/O addr 11h
 1ffd 3a2680    ld      a,(8026h)
 2000 cb77      bit     6,a
 2002 c22f1f    jp      nz,1f2fh
@@ -4181,20 +4213,20 @@
 2009 cd3017    call    1730h				;
 200c 3e22      ld      a,22h
 200e 0613      ld      b,13h
-2010 cd5415    call    1554h				; write out 22h 13h to ports A and B
+2010 cd5415    call    1554h				; write 22h to I/O addr 13h
 2013 3e00      ld      a,00h
 2015 0621      ld      b,21h
-2017 cd5415    call    1554h				; write out 00h 21h to ports A and B
+2017 cd5415    call    1554h				; write 00h to I/O addr 21h
 201a 3e07      ld      a,07h
 201c 0611      ld      b,11h
-201e cd5415    call    1554h				; write out 07h 11h to ports A and B
+201e cd5415    call    1554h				; write 07h to I/O addr 11h
 2021 3e01      ld      a,01h
 2023 cddd01    call    01ddh				; delay 1 period
 2026 06b1      ld      b,0b1h
-2028 cd5415    call    1554h				; write out xxh b1h to ports A and B
+2028 cd5415    call    1554h				; write a to I/O addr b1h
 202b 3e0f      ld      a,0fh
 202d 0611      ld      b,11h
-202f cd5415    call    1554h				; write out 0fh 11h to ports A and B
+202f cd5415    call    1554h				; write 0fh to I/O addr 11h
 2032 3e01      ld      a,01h
 2034 0e03      ld      c,03h
 2036 cd3017    call    1730h				;
@@ -4222,7 +4254,7 @@
 2069 cd4121    call    2141h				;
 206c 3e02      ld      a,02h
 206e 0613      ld      b,13h
-2070 cd5415    call    1554h				; write out 02h 13h to ports A and B
+2070 cd5415    call    1554h				; write 02h to I/O addr 13h
 2073 3e01      ld      a,01h
 2075 0e05      ld      c,05h
 2077 cd3017    call    1730h				;
@@ -4310,7 +4342,7 @@
 2106 f5        push    af					
 2107 3e02      ld      a,02h
 2109 0613      ld      b,13h
-210b cd5415    call    1554h				; write out 02h 13h to ports A and B
+210b cd5415    call    1554h				; write 02h to I/O addr 13h
 210e cd4121    call    2141h				;
 2111 3e02      ld      a,02h
 2113 0e00      ld      c,00h
@@ -4348,17 +4380,17 @@
 ; called from 20f4, 210e, 2069, 2128
 2141 3e07      ld      a,07h				
 2143 0611      ld      b,11h
-2145 cd5415    call    1554h				; write out 07h 11h to ports A and B
+2145 cd5415    call    1554h				; write 07h to I/O addr 11h
 2148 3e01      ld      a,01h
 214a cdd507    call    07d5h				; delay 180h * a periods
 214d 3e03      ld      a,03h
 214f 0611      ld      b,11h
-2151 cd5415    call    1554h				; write out 03h 11h to ports A and B
+2151 cd5415    call    1554h				; write 03h to I/O addr 11h
 2154 3e01      ld      a,01h
 2156 cdd507    call    07d5h				; delay 180h * a periods
 2159 3e01      ld      a,01h
 215b 0611      ld      b,11h
-215d cd5415    call    1554h				; write out 01h 11h to ports A and B
+215d cd5415    call    1554h				; write 01h to I/O addr 11h
 2160 c9        ret     
 ;*************************************************************************************
 2161 c9        ret     						; from 1f33
@@ -4386,7 +4418,7 @@
 21a0 3e05      ld      a,05h
 21a2 cddd01    call    01ddh				; delay 5 periods
 21a5 0643      ld      b,43h
-21a7 cdb10c    call    0cb1h				; write 43h to port B, return with a = port A
+21a7 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
 21aa cb57      bit     2,a
 21ac c29721    jp      nz,2197h
 21af d1        pop     de
@@ -4406,7 +4438,7 @@
 21c1 23        inc     hl
 21c2 cd3017    call    1730h				;
 21c5 0610      ld      b,10h
-21c7 cdb10c    call    0cb1h				; write 10h to port B, return with a = port A
+21c7 cdb10c    call    0cb1h				; read hardware port 10h to a 
 21ca c1        pop     bc
 21cb e61f      and     1fh
 21cd be        cp      (hl)
@@ -4555,7 +4587,7 @@
 22fd cd3017    call    1730h				;
 2300 3e22      ld      a,22h
 2302 0613      ld      b,13h
-2304 cd5415    call    1554h				; write out 22h 13h to ports A and B
+2304 cd5415    call    1554h				; write 22h to I/O addr 13h
 2307 0600      ld      b,00h
 2309 16ff      ld      d,0ffh
 230b 1e80      ld      e,80h
@@ -4572,7 +4604,7 @@
 2324 cd3017    call    1730h				;
 2327 3e02      ld      a,02h
 2329 0613      ld      b,13h
-232b cd5415    call    1554h				; write out 02h 13h to ports A and B
+232b cd5415    call    1554h				; write 02h to I/O addr 13h
 232e 0600      ld      b,00h
 2330 1610      ld      d,10h
 2332 1e00      ld      e,00h
@@ -4594,7 +4626,7 @@
 234b cd3017    call    1730h
 234e 3e02      ld      a,02h
 2350 0613      ld      b,13h
-2352 cd5415    call    1554h				; write out 02h 13h to ports A and B
+2352 cd5415    call    1554h				; write 02h to I/O addr 13h
 2355 f1        pop     af
 2356 214123    ld      hl,2341h				; data at 2341, error code 2 01 for display
 2359 c3fa15    jp      15fah
