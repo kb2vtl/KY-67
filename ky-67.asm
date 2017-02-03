@@ -4,7 +4,18 @@
 ; 
 ; Created with dZ80 2.0 then organized, cleaned up and commented by Peter Gottlieb
 ; I am releasing my reverse engineering to the public domain in the hope someone finds it useful.
-; 
+;
+; Front panel read ports (0cb1h read)  Note: bit is high nuless switch is active, then bit low.
+;           Port      Port       Port      Port
+; Bit  A5-   40        41         42        43
+;  0    70   CH-1      SQ OFF     Fill 1    MHz Up
+;  1    71   CH-2      OPR        Fill 2    MHz Dn
+;  2    72   CH-3      RT         Fill 3    kHz Up
+;  3    73   CH-4      LD         Fill 4    kHz Dn
+;  4    75   CH-M      TD         Fill 5    -
+;  5    76   P Mode    BRT OFF    Fill 6    -
+;  6    58   -         -          -         -
+;  7    59   -         -          -         -
 ; 
 ; 8000h - 807fh NSC810 RAM (128 bytes)
 ; 8080h - 8099h NSC810 registers (IO and timers)
@@ -293,8 +304,8 @@
 ;*******************************************************************************
 ; called from 06ec
 0268 0641      ld      b,41h				
-026a cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
-026d cb6f      bit     5,a
+026a cdb10c    call    0cb1h				; read hardware port 41h to a (front panel, mode sw)
+026d cb6f      bit     5,a                  ; is DISP switch in OFF?
 026f 280e      jr      z,027fh
 0271 212680    ld      hl,8026h
 0274 cb5e      bit     3,(hl)
@@ -309,7 +320,7 @@
 0288 cdf503    call    03f5h				; write out 00h 4dh to ports A and B - disable display
 028b 0643      ld      b,43h
 028d cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
-0290 cb67      bit     4,a
+0290 cb67      bit     4,a					; what is this bit represent?
 0292 200e      jr      nz,02a2h
 0294 212680    ld      hl,8026h
 0297 cb66      bit     4,(hl)
@@ -380,7 +391,7 @@
 0323 cb6f      bit     5,a
 0325 2812      jr      z,0339h
 0327 0643      ld      b,43h
-0329 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
+0329 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel, freq up/dn)
 032c e60f      and     0fh
 032e fe06      cp      06h
 0330 2005      jr      nz,0337h
@@ -492,7 +503,7 @@
 03d6 f5        push    af
 03d7 0641      ld      b,41h
 03d9 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
-03dc cb6f      bit     5,a					; Z is inverse of bit 5 of reg a
+03dc cb6f      bit     5,a					; Z is inverse of bit 5 of reg a (bit 5=0 is disp off)
 03de 2811      jr      z,03f1h				; bail out if bit 5 of reg a is zero
 03e0 0648      ld      b,48h				; bit 5 is one, b=48
 03e2 0e05      ld      c,05h
@@ -711,7 +722,7 @@
 0551 f5        push    af
 0552 0641      ld      b,41h
 0554 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel) 
-0557 cb6f      bit     5,a					; z=!a.5
+0557 cb6f      bit     5,a					; z=!a.5  (bit 5=0 is disp off)
 0559 2847      jr      z,05a2h				; exit if a.5 false
 055b 210f80    ld      hl,800fh
 055e 3e2f      ld      a,2fh
@@ -896,7 +907,7 @@
 06c3 2020      jr      nz,06e5h
 06c5 0640      ld      b,40h
 06c7 cdb10c    call    0cb1h				; read hardware port 40h to a (front panel)
-06ca eeff      xor     0ffh
+06ca eeff      xor     0ffh					; channel select switch
 06cc e61f      and     1fh
 06ce 47        ld      b,a
 06cf 3a1280    ld      a,(8012h)
@@ -904,7 +915,7 @@
 06d3 200b      jr      nz,06e0h
 06d5 0643      ld      b,43h
 06d7 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
-06da eeff      xor     0ffh
+06da eeff      xor     0ffh					; freq up/dn switches
 06dc e60f      and     0fh
 06de 2805      jr      z,06e5h
 06e0 212680    ld      hl,8026h
@@ -936,8 +947,8 @@
 0711 317f80    ld      sp,807fh				; stack pointer reset
 0714 fd216106  ld      iy,0661h
 0718 dd21be01  ld      ix,01beh
-071c cdd008    call    08d0h				;
-071f cdcb0b    call    0bcbh				;
+071c cdd008    call    08d0h				; seems to initialize c000 memory 
+071f cdcb0b    call    0bcbh				; looks like initialization code in 8000 memory
 0722 cd2509    call    0925h				;
 0725 cdf001    call    01f0h				; blank display
 0728 cdda02    call    02dah				;
@@ -1191,20 +1202,23 @@
 08cf c9        ret     
 ;***************************************************************************
 ; called from 071c
+;
+; seems to initialize c000 memory 
+;
 08d0 062a      ld      b,2ah				
 08d2 2100c0    ld      hl,0c000h				; c000 battery backed RAM
 08d5 112a00    ld      de,002ah
 08d8 c5        push    bc
 08d9 e5        push    hl
-08da 7e        ld      a,(hl)					; a=(c000)
+08da 7e        ld      a,(hl)					; a=(c000), (c001), ... (c029)
 08db e60f      and     0fh
 08dd 4f        ld      c,a						; c=(c000) 
 08de 19        add     hl,de
-08df 7e        ld      a,(hl)					; a=(c02a)
+08df 7e        ld      a,(hl)					; a=(c02a), (c02b), ... (c053)
 08e0 e60f      and     0fh
 08e2 47        ld      b,a						; b=(c02a)
 08e3 19        add     hl,de
-08e4 7e        ld      a,(hl)					; a=(c054)
+08e4 7e        ld      a,(hl)					; a=(c054), (co55), ... (c07f)
 08e5 e60f      and     0fh
 08e7 b9        cp      c
 08e8 2804      jr      z,08eeh
@@ -1213,11 +1227,11 @@
 08ed 79        ld      a,c
 08ee e1        pop     hl
 08ef e5        push    hl
-08f0 77        ld      (hl),a					; (c000)=a
+08f0 77        ld      (hl),a					; (c000)=a, etc as above
 08f1 19        add     hl,de
-08f2 77        ld      (hl),a					; (c02a)=a
+08f2 77        ld      (hl),a					; (c02a)=a, etc as above
 08f3 19        add     hl,de
-08f4 77        ld      (hl),a					; (c054)=a
+08f4 77        ld      (hl),a					; (c054)=a, etc as above
 08f5 e1        pop     hl
 08f6 c1        pop     bc
 08f7 23        inc     hl
@@ -1227,15 +1241,15 @@
 08ff 112a00    ld      de,002ah
 0902 c5        push    bc
 0903 e5        push    hl
-0904 7e        ld      a,(hl)
+0904 7e        ld      a,(hl)					; a=(c080), (c081), ... (c0a9)
 0905 e60f      and     0fh
 0907 4f        ld      c,a
 0908 19        add     hl,de
-0909 7e        ld      a,(hl)
+0909 7e        ld      a,(hl)					; a=(c0aa), (c0ab), ... (c0d3)
 090a e60f      and     0fh
 090c 47        ld      b,a
 090d 19        add     hl,de
-090e 7e        ld      a,(hl)
+090e 7e        ld      a,(hl)					; a=(c0d4), (c0d5), ... (c0ff)
 090f e60f      and     0fh
 0911 b9        cp      c
 0912 2804      jr      z,0918h
@@ -1244,11 +1258,11 @@
 0917 79        ld      a,c
 0918 e1        pop     hl
 0919 e5        push    hl
-091a 77        ld      (hl),a
+091a 77        ld      (hl),a					; (c080)=a, etc as above
 091b 19        add     hl,de
-091c 77        ld      (hl),a
+091c 77        ld      (hl),a					; (c0aa)=a, etc as above
 091d 19        add     hl,de
-091e 77        ld      (hl),a
+091e 77        ld      (hl),a					; (c0d4)=a, etc as above
 091f e1        pop     hl
 0920 c1        pop     bc
 0921 23        inc     hl
@@ -1558,22 +1572,22 @@
 0bcb 062c      ld      b,2ch				
 0bcd 210080    ld      hl,8000h
 0bd0 3e00      ld      a,00h
-0bd2 77        ld      (hl),a
-0bd3 23        inc     hl
-0bd4 10fc      djnz    0bd2h
+0bd2 77        ld      (hl),a				; 8000=0
+0bd3 23        inc     hl					;
+0bd4 10fc      djnz    0bd2h				; 8000-802c = 0
 0bd6 0e00      ld      c,00h
 0bd8 0641      ld      b,41h
-0bda cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
+0bda cdb10c    call    0cb1h				; read hardware port 41h to a (front panel mode switch)
 0bdd cb6f      bit     5,a
 0bdf 2802      jr      z,0be3h
 0be1 cbd9      set     3,c
 0be3 0643      ld      b,43h
-0be5 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
+0be5 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/dn switches)
 0be8 cb67      bit     4,a
 0bea 2002      jr      nz,0beeh
 0bec cbe1      set     4,c
 0bee 3e23      ld      a,23h
-0bf0 328680    ld      (8086h),a			; set DDR C port direction
+0bf0 328680    ld      (8086h),a			; set DDR C port direction 00100011
 0bf3 3e02      ld      a,02h
 0bf5 cdd507    call    07d5h				; delay 180h * a periods
 0bf8 3a8280    ld      a,(8082h)			; read port C
@@ -1581,27 +1595,27 @@
 0bfd 2802      jr      z,0c01h
 0bff cbf1      set     6,c
 0c01 3e27      ld      a,27h
-0c03 328680    ld      (8086h),a			; set DDR C port direction
+0c03 328680    ld      (8086h),a			; set DDR C port direction 00100111
 0c06 79        ld      a,c
-0c07 322680    ld      (8026h),a			; set DDR C port direction
+0c07 322680    ld      (8026h),a			;
 0c0a 3eff      ld      a,0ffh
 0c0c 321980    ld      (8019h),a
 0c0f 211d80    ld      hl,801dh
 0c12 3e30      ld      a,30h
-0c14 77        ld      (hl),a
+0c14 77        ld      (hl),a				; 801d=30h
 0c15 23        inc     hl
 0c16 3e01      ld      a,01h
-0c18 77        ld      (hl),a
+0c18 77        ld      (hl),a				; 801e=01h
 0c19 23        inc     hl
 0c1a 3e80      ld      a,80h
-0c1c 77        ld      (hl),a
+0c1c 77        ld      (hl),a				; 801f=80h
 0c1d 3e11      ld      a,11h
 0c1f 210880    ld      hl,8008h
-0c22 77        ld      (hl),a
+0c22 77        ld      (hl),a				; 8008=11h
 0c23 23        inc     hl
-0c24 77        ld      (hl),a
+0c24 77        ld      (hl),a				; 8009=11h
 0c25 23        inc     hl
-0c26 77        ld      (hl),a
+0c26 77        ld      (hl),a				; 800a=11h
 0c27 c9        ret     
 ;*********************************************************************************
 ; called by 0e3e, 0e82
@@ -2130,8 +2144,8 @@
 0fd8 212780    ld      hl,8027h
 0fdb cb86      res     0,(hl)
 0fdd 0641      ld      b,41h
-0fdf cdb10c    call    0cb1h				; read hardware port 41h to a (front panel?)
-0fe2 cb57      bit     2,a
+0fdf cdb10c    call    0cb1h				; read hardware port 41h to a (front panel, mode sw)
+0fe2 cb57      bit     2,a					; bit 2 low when mode RT selected
 0fe4 203c      jr      nz,1022h
 0fe6 0610      ld      b,10h
 0fe8 cdb10c    call    0cb1h				; read hardware port 10h to a
@@ -2263,12 +2277,12 @@
 1103 cdd507    call    07d5h				; delay 180h * a periods
 1106 1600      ld      d,00h
 1108 0640      ld      b,40h
-110a cdb10c    call    0cb1h				; read hardware port 40h to a (front panel)
+110a cdb10c    call    0cb1h				; read hardware port 40h to a (front panel ch switch)
 110d eeff      xor     0ffh
 110f e63f      and     3fh
 1111 4f        ld      c,a
 1112 0641      ld      b,41h
-1114 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
+1114 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel mode switch)
 1117 eeff      xor     0ffh
 1119 f5        push    af
 111a e60f      and     0fh
@@ -2289,7 +2303,7 @@
 1130 e6c0      and     0c0h
 1132 4f        ld      c,a
 1133 0642      ld      b,42h
-1135 cdb10c    call    0cb1h				; read hardware port 42h to a (front panel)
+1135 cdb10c    call    0cb1h				; read hardware port 42h to a (front panel fill select switch)
 1138 eeff      xor     0ffh
 113a e63f      and     3fh
 113c b1        or      c
@@ -2300,7 +2314,7 @@
 1143 e6c0      and     0c0h
 1145 4f        ld      c,a
 1146 0643      ld      b,43h
-1148 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
+1148 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/dn switches)
 114b eeff      xor     0ffh
 114d 47        ld      b,a
 114e e60f      and     0fh
@@ -2780,7 +2794,7 @@
 1531 0641      ld      b,41h
 1533 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
 1536 41        ld      b,c
-1537 cb6f      bit     5,a					; =!a.5
+1537 cb6f      bit     5,a					; =!a.5 (bit 5=0 is disp off)
 1539 2815      jr      z,1550h				; exit if a.5 true returned from port B=41h
 153b 78        ld      a,b
 153c fe06      cp      06h
@@ -2817,13 +2831,13 @@
 ;
 ; CPU card pins:
 ; 1x   10
-; 2x   28
-; 3x   30
-; 4x   50
-; 5x   32
+; 2x   28	Radio board pin 32
+; 3x   30	Radio board pin 33
+; 4x   50	front panel
+; 5x   32	Radio board pin 34
 ; 8x   18
 ; ax   64
-; bx   36
+; bx   36	Radio board pin 42
 ;
 1554 c5        push    bc					
 1555 f5        push    af
@@ -2953,10 +2967,10 @@
 162f 3e0a      ld      a,0ah				
 1631 cddd01    call    01ddh				; delay 10 periods
 1634 0643      ld      b,43h
-1636 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
-1639 cb4f      bit     1,a
+1636 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/dn switches)
+1639 cb4f      bit     1,a					; MHz down
 163b ca4516    jp      z,1645h
-163e cb47      bit     0,a
+163e cb47      bit     0,a					; MHz up
 1640 c2d916    jp      nz,16d9h				;
 1643 e1        pop     hl
 1644 c9        ret    
@@ -2997,10 +3011,10 @@
 168a d1        pop     de
 168b cd5f17    call    175fh				;
 168e 0643      ld      b,43h
-1690 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
-1693 cb5f      bit     3,a
+1690 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/dn switches)
+1693 cb5f      bit     3,a					; kHz down
 1695 cc9521    call    z,2195h				;
-1698 cb4f      bit     1,a
+1698 cb4f      bit     1,a					; MHz down
 169a c28e16    jp      nz,168eh
 169d c9        ret   
 ;******************************************************************************************  
@@ -3023,8 +3037,8 @@
 16c2 3e05      ld      a,05h
 16c4 cddd01    call    01ddh				; delay 5 periods
 16c7 0643      ld      b,43h
-16c9 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
-16cc cb5f      bit     3,a					; z=!a.3
+16c9 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/dn switches)
+16cc cb5f      bit     3,a					; z=!a.3  (bit 3=0 when kHz down switch)
 16ce cc9521    call    z,2195h				; call if a.3=0
 16d1 c3db16    jp      16dbh
 
@@ -3937,8 +3951,8 @@
 1dcc 3e27      ld      a,27h
 1dce 328680    ld      (8086h),a			; set DDR C port direction 00100111
 1dd1 0643      ld      b,43h
-1dd3 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
-1dd6 cb5f      bit     3,a
+1dd3 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/dn switches)
+1dd6 cb5f      bit     3,a					; bit 3=0 when kHz down switch
 1dd8 c0        ret     nz					; return if bit 3 true
 1dd9 210000    ld      hl,0000h
 1ddc 110000    ld      de,0000h
@@ -3954,18 +3968,18 @@
 1ded e607      and     07h
 1def 0601      ld      b,01h
 1df1 cd2d15    call    152dh				; display a pos 5
-1df4 cd211e    call    1e21h				;
+1df4 cd211e    call    1e21h				; hl = 0 0 0 h7 h6 h5 h4 h3 - h2 h1 h0 l7 l6 l5 l4 l3, a = 0 0 0 0 0 l5 l4 l3
 1df7 0602      ld      b,02h
 1df9 cd2d15    call    152dh				; display a pos 4
-1dfc cd211e    call    1e21h				;
+1dfc cd211e    call    1e21h				; hl = 0 0 0 h7 h6 h5 h4 h3 - h2 h1 h0 l7 l6 l5 l4 l3, a = 0 0 0 0 0 l5 l4 l3
 1dff 0603      ld      b,03h
 1e01 cd2d15    call    152dh				; display a pos 3
-1e04 cd211e    call    1e21h				;
+1e04 cd211e    call    1e21h				; hl = 0 0 0 h7 h6 h5 h4 h3 - h2 h1 h0 l7 l6 l5 l4 l3, a = 0 0 0 0 0 l5 l4 l3
 1e07 0604      ld      b,04h
 1e09 cd2d15    call    152dh				; display a pos 2
-1e0c cd211e    call    1e21h				;
+1e0c cd211e    call    1e21h				; hl = 0 0 0 h7 h6 h5 h4 h3 - h2 h1 h0 l7 l6 l5 l4 l3, a = 0 0 0 0 0 l5 l4 l3
 1e0f 47        ld      b,a
-1e10 cd211e    call    1e21h				;
+1e10 cd211e    call    1e21h				; hl = 0 0 0 h7 h6 h5 h4 h3 - h2 h1 h0 l7 l6 l5 l4 l3, a = 0 0 0 0 0 l5 l4 l3
 1e13 80        add     a,b
 1e14 0605      ld      b,05h
 1e16 cd2d15    call    152dh				; display a pos 1
@@ -3974,6 +3988,9 @@
 1e1e c3311e    jp      1e31h
 ;****************************************************************************************
 ; called from 1df4, 1dfc, 1e04, 1e0c, 1e10
+;
+; hl = 0 0 0 h7 h6 h5 h4 h3 - h2 h1 h0 l7 l6 l5 l4 l3, a = 0 0 0 0 0 l5 l4 l3
+;
 1e21 cb3c      srl     h					
 1e23 cb1d      rr      l
 1e25 cb3c      srl     h
@@ -3986,7 +4003,7 @@
 ;****************************************************************************************
 ; continuation from above
 1e31 00        nop     						
-1e32 cd561e    call    1e56h				;
+1e32 cd561e    call    1e56h				; blank display
 1e35 0601      ld      b,01h
 1e37 3e20      ld      a,20h
 1e39 cd2d15    call    152dh				; display 0 pos 5
@@ -4001,10 +4018,11 @@
 1e4a 78        ld      a,b
 1e4b fe06      cp      06h
 1e4d c2371e    jp      nz,1e37h
-1e50 cd561e    call    1e56h				;
+1e50 cd561e    call    1e56h				; blank display
 1e53 c3601e    jp      1e60h
 ;**************************************************************************
 ; called from 1e32, 1e50
+; blank display
 1e56 0605      ld      b,05h				
 1e58 3e2a      ld      a,2ah
 1e5a cd2d15    call    152dh				; display blank pos 1
@@ -4013,7 +4031,7 @@
 ;**************************************************************************
 ; continuation from above
 1e60 0642      ld      b,42h				
-1e62 cdb10c    call    0cb1h				; read hardware port 42h to a (front panel)
+1e62 cdb10c    call    0cb1h				; read hardware port 42h to a (front panel fill select switch)
 1e65 0e20      ld      c,20h
 1e67 e63f      and     3fh
 1e69 fe3f      cp      3fh
@@ -4028,7 +4046,7 @@
 1e7b 0601      ld      b,01h
 1e7d cd2d15    call    152dh				; display a pos 5
 1e80 0641      ld      b,41h
-1e82 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
+1e82 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel mode switch)
 1e85 0e20      ld      c,20h
 1e87 47        ld      b,a
 1e88 e60f      and     0fh
@@ -4048,7 +4066,7 @@
 1ea3 0602      ld      b,02h
 1ea5 cd2d15    call    152dh				; display a pos 4
 1ea8 0643      ld      b,43h
-1eaa cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
+1eaa cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/down switches)
 1ead 0e20      ld      c,20h
 1eaf e60f      and     0fh
 1eb1 fe0f      cp      0fh
@@ -4063,7 +4081,7 @@
 1ec3 0603      ld      b,03h
 1ec5 cd2d15    call    152dh				; display a pos 3
 1ec8 0640      ld      b,40h
-1eca cdb10c    call    0cb1h				; read hardware port 40h to a (front panel)
+1eca cdb10c    call    0cb1h				; read hardware port 40h to a (front panel channel select switch)
 1ecd 0e20      ld      c,20h
 1ecf 47        ld      b,a
 1ed0 e61f      and     1fh
@@ -4084,12 +4102,12 @@
 1eec cd2d15    call    152dh				; display a pos 2
 1eef 0e20      ld      c,20h
 1ef1 0641      ld      b,41h
-1ef3 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel)
+1ef3 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel mode switch)
 1ef6 cb6f      bit     5,a
 1ef8 c2fc1e    jp      nz,1efch
 1efb 0c        inc     c
 1efc 0643      ld      b,43h
-1efe cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
+1efe cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/down switches)
 1f01 cb67      bit     4,a
 1f03 c2071f    jp      nz,1f07h
 1f06 0c        inc     c
@@ -4418,7 +4436,7 @@
 21a0 3e05      ld      a,05h
 21a2 cddd01    call    01ddh				; delay 5 periods
 21a5 0643      ld      b,43h
-21a7 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
+21a7 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/down switches)
 21aa cb57      bit     2,a
 21ac c29721    jp      nz,2197h
 21af d1        pop     de
