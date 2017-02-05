@@ -16,6 +16,15 @@
 ;  5    76   P Mode    BRT OFF    Fill 6    -
 ;  6    58   -         -          -         -
 ;  7    59   -         -          -         -
+;
+; Port bbh is the Interrupt Control Register (4 low bits)
+;
+;Bit  Name    Function
+; 0   IEI     Interrupt enable for INTR/ (apparently not used)
+; 1   IEC     Interrupt enable for RSTC/ (apparently not used)
+; 2   IEB     Interrupt enable for RSTB/
+; 3   IEA     Interrupt enable for RSTA/
+;
 ; 
 ; 8000h - 807fh NSC810 RAM (128 bytes)
 ; 8080h - 8099h NSC810 registers (IO and timers)
@@ -37,7 +46,7 @@
 ; 800fh
 ; 8010h		
 ; 8011h
-; 8012h
+; 8012h		Present channel?
 ; 8013h
 ; 8014h
 ; 8015h
@@ -53,7 +62,7 @@
 ; 801fh
 ; 8020h		
 ; 8023h
-; 8024h
+; 8024h		Which fill selected, 113d, low 6 bits represent front panel port 42, high 2 some sort of status
 ; 8025h
 ; 8026h
 ; 8027h
@@ -90,16 +99,16 @@
 0000 f3        di      						; power-on reset, disable interrupts
 0001 c38000    jp      0080h				; jump to 80
 
-0034 dde9      jp      (ix)
+0034 dde9      jp      (ix)					; RSTB/ interrupt vector (CPU card pin 66)
 
 0038 f3        di            				; INTR/ Mode 1, disable interrupts
 0039 c38000    jp      0080h				; jump to 80
 
-003c fde9      jp      (iy)
+003c fde9      jp      (iy)					; RSTA/ interrupt vector (CPU card pin 63)
 
 0080 c3d215    jp      15d2h				; startup
 
-0083 00        nop     						; from 16de
+0083 00        nop     						; from 16de, after 88888 startup display
 0084 c30d07    jp      070dh
 0087 00        nop     						; from 0731
 0088 c31b08    jp      081bh
@@ -197,13 +206,14 @@
 01ba cd5415    call    1554h				; write xxh to I/O addr 80h
 01bd c9        ret     
 ;***********************************************************************
-; where is this called from?
+; gets here from 070d routine via interrupt?
+;
 01be f3        di      
 01bf e5        push    hl
 01c0 c5        push    bc
 01c1 f5        push    af
 01c2 3e00      ld      a,00h
-01c4 d3bb      out     (0bbh),a
+01c4 d3bb      out     (0bbh),a				; disable interrupts
 01c6 212680    ld      hl,8026h
 01c9 cbae      res     5,(hl)
 01cb 0613      ld      b,13h
@@ -211,7 +221,7 @@
 01d0 320080    ld      (8000h),a
 01d3 f3        di      
 01d4 3e0c      ld      a,0ch
-01d6 d3bb      out     (0bbh),a
+01d6 d3bb      out     (0bbh),a				; enable only RSTA/ and RSTB/ interrupts
 01d8 f1        pop     af
 01d9 c1        pop     bc
 01da e1        pop     hl
@@ -306,7 +316,7 @@
 0268 0641      ld      b,41h				
 026a cdb10c    call    0cb1h				; read hardware port 41h to a (front panel, mode sw)
 026d cb6f      bit     5,a                  ; is DISP switch in OFF?
-026f 280e      jr      z,027fh
+026f 280e      jr      z,027fh				; skip displaying if switch is in off position
 0271 212680    ld      hl,8026h
 0274 cb5e      bit     3,(hl)
 0276 2013      jr      nz,028bh
@@ -320,7 +330,7 @@
 0288 cdf503    call    03f5h				; write out 00h 4dh to ports A and B - disable display
 028b 0643      ld      b,43h
 028d cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
-0290 cb67      bit     4,a					; what is this bit represent?
+0290 cb67      bit     4,a					; what is this bit represent?  not any switch...
 0292 200e      jr      nz,02a2h
 0294 212680    ld      hl,8026h
 0297 cb66      bit     4,(hl)
@@ -389,11 +399,11 @@
 031e 0611      ld      b,11h
 0320 cdb10c    call    0cb1h				; read hardware port 11h to a
 0323 cb6f      bit     5,a
-0325 2812      jr      z,0339h
+0325 2812      jr      z,0339h				; make this a straight jump and it bypasses this crypto heartbeat detection
 0327 0643      ld      b,43h
 0329 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel, freq up/dn)
 032c e60f      and     0fh
-032e fe06      cp      06h
+032e fe06      cp      06h					; if MHz up and kHz down when it gets here then radio displays 2617 sometimes 2636
 0330 2005      jr      nz,0337h
 0332 212680    ld      hl,8026h
 0335 cbc6      set     0,(hl)
@@ -601,51 +611,51 @@
 048d c9        ret     
 ;******************************************************************************
 ; called from 11d3, 129b
-048e 010000    ld      bc,0000h				
+048e 010000    ld      bc,0000h				; b=c=0
 0491 110000    ld      de,0000h
 0494 3a2380    ld      a,(8023h)
 0497 cb47      bit     0,a
 0499 2801      jr      z,049ch
-049b 04        inc     b
+049b 04        inc     b					; b=b+1 if 8023.0 true
 049c cb4f      bit     1,a
 049e 2801      jr      z,04a1h
-04a0 04        inc     b
+04a0 04        inc     b					; b=b+1 if 8023.1 true
 04a1 cb57      bit     2,a
 04a3 2801      jr      z,04a6h
-04a5 04        inc     b
+04a5 04        inc     b					; b=b+1 if 8023.2 true
 04a6 cb5f      bit     3,a
 04a8 2801      jr      z,04abh
-04aa 04        inc     b
+04aa 04        inc     b					; b=b+1 if 8023.3 true
 04ab cb67      bit     4,a
 04ad 2801      jr      z,04b0h
-04af 04        inc     b
+04af 04        inc     b					; b=b+1 if 8023.4 true
 04b0 3e01      ld      a,01h
 04b2 b8        cp      b
 04b3 2064      jr      nz,0519h
-04b5 3a2480    ld      a,(8024h)
+04b5 3a2480    ld      a,(8024h)			; which fill selected
 04b8 cb47      bit     0,a
-04ba 2801      jr      z,04bdh
+04ba 2801      jr      z,04bdh				; fill 1 not selected
 04bc 0c        inc     c
 04bd cb4f      bit     1,a
-04bf 2801      jr      z,04c2h
+04bf 2801      jr      z,04c2h				; fill 2 not selected
 04c1 0c        inc     c
 04c2 cb57      bit     2,a
-04c4 2801      jr      z,04c7h
+04c4 2801      jr      z,04c7h				; fill 3 not selected
 04c6 0c        inc     c
 04c7 cb5f      bit     3,a
-04c9 2801      jr      z,04cch
+04c9 2801      jr      z,04cch				; fill 4 not selected
 04cb 0c        inc     c
 04cc cb67      bit     4,a
-04ce 2801      jr      z,04d1h
+04ce 2801      jr      z,04d1h				; fill 5 not selected
 04d0 0c        inc     c
 04d1 cb6f      bit     5,a
-04d3 2801      jr      z,04d6h
+04d3 2801      jr      z,04d6h				; fill 6 not selected
 04d5 0c        inc     c
 04d6 cb77      bit     6,a
-04d8 2801      jr      z,04dbh
+04d8 2801      jr      z,04dbh				; bit 6?
 04da 14        inc     d
 04db cb7f      bit     7,a
-04dd 2801      jr      z,04e0h
+04dd 2801      jr      z,04e0h				; bit 7?
 04df 14        inc     d
 04e0 3e01      ld      a,01h
 04e2 b9        cp      c
@@ -861,13 +871,14 @@
 065f 77        ld      (hl),a				; (hl)=a
 0660 c9        ret     
 ;*****************************************************************************
-; where is this called from?
+; 070d routine gets here via interrupt?
+;
 0661 f3        di      
 0662 e5        push    hl
 0663 c5        push    bc
 0664 f5        push    af
 0665 3e00      ld      a,00h
-0667 d3bb      out     (0bbh),a
+0667 d3bb      out     (0bbh),a				; disable interrupts
 0669 211380    ld      hl,8013h
 066c 7e        ld      a,(hl)
 066d 3c        inc     a
@@ -906,20 +917,20 @@
 06c1 e603      and     03h
 06c3 2020      jr      nz,06e5h
 06c5 0640      ld      b,40h
-06c7 cdb10c    call    0cb1h				; read hardware port 40h to a (front panel)
-06ca eeff      xor     0ffh					; channel select switch
-06cc e61f      and     1fh
+06c7 cdb10c    call    0cb1h				; read hardware port 40h to a (front panel channel select)
+06ca eeff      xor     0ffh					; flip bits to active high
+06cc e61f      and     1fh					; ignore Plain/Cipher bit
 06ce 47        ld      b,a
-06cf 3a1280    ld      a,(8012h)
+06cf 3a1280    ld      a,(8012h)			; get 8012
 06d2 b8        cp      b
-06d3 200b      jr      nz,06e0h
+06d3 200b      jr      nz,06e0h				; jump if different
 06d5 0643      ld      b,43h
-06d7 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel)
-06da eeff      xor     0ffh					; freq up/dn switches
-06dc e60f      and     0fh
-06de 2805      jr      z,06e5h
+06d7 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel, freq up/dn switches)
+06da eeff      xor     0ffh					; make high asserted
+06dc e60f      and     0fh					; just look at up/dn switches
+06de 2805      jr      z,06e5h				; jump if nothing on
 06e0 212680    ld      hl,8026h
-06e3 cbd6      set     2,(hl)
+06e3 cbd6      set     2,(hl)				; set 8026.2 if one of the freq change switches turned
 06e5 3a1380    ld      a,(8013h)
 06e8 e603      and     03h
 06ea fe01      cp      01h
@@ -934,7 +945,7 @@
 0700 328180    ld      (8081h),a			; write 00h to port B
 0703 f3        di      
 0704 3e0c      ld      a,0ch
-0706 d3bb      out     (0bbh),a
+0706 d3bb      out     (0bbh),a				; enable only interrupts RSTA/ and RSTB/
 0708 f1        pop     af
 0709 c1        pop     bc
 070a e1        pop     hl
@@ -942,19 +953,22 @@
 070c c9        ret     
 ;**************************************************************************************
 ; from 0084
+;
+; comes here after 88888 display at end of startup
+;
 070d 3e00      ld      a,00h				
-070f d3bb      out     (0bbh),a				; write 0 to port bb
+070f d3bb      out     (0bbh),a				; disable interrupts
 0711 317f80    ld      sp,807fh				; stack pointer reset
-0714 fd216106  ld      iy,0661h
-0718 dd21be01  ld      ix,01beh
+0714 fd216106  ld      iy,0661h				; Set up RSTA/ interuppt vector
+0718 dd21be01  ld      ix,01beh				; Set up RSTB/ interuppt vector
 071c cdd008    call    08d0h				; seems to initialize c000 memory 
 071f cdcb0b    call    0bcbh				; looks like initialization code in 8000 memory
-0722 cd2509    call    0925h				;
+0722 cd2509    call    0925h				; set and start timers
 0725 cdf001    call    01f0h				; blank display
 0728 cdda02    call    02dah				;
 072b f3        di      
 072c 3e0c      ld      a,0ch
-072e d3bb      out     (0bbh),a				; write 0ch to port bb
+072e d3bb      out     (0bbh),a				; enable only interrupts RSTA/ and RSTB/
 0730 fb        ei      
 0731 c38700    jp      0087h				;
 ;**************************************************************************************
@@ -1270,6 +1284,9 @@
 0924 c9        ret     
 ;***********************************************************************************
 ; called from 0722
+;
+; set and start timers
+;
 0925 3e00      ld      a,00h				
 0927 328780    ld      (8087h),a			; set port mode definition to standard I/O
 092a 3e00      ld      a,00h
@@ -1583,7 +1600,7 @@
 0be1 cbd9      set     3,c
 0be3 0643      ld      b,43h
 0be5 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/dn switches)
-0be8 cb67      bit     4,a
+0be8 cb67      bit     4,a					; what is bit 4?  not a switch
 0bea 2002      jr      nz,0beeh
 0bec cbe1      set     4,c
 0bee 3e23      ld      a,23h
@@ -1622,7 +1639,7 @@
 0c28 e5        push    hl					
 0c29 c5        push    bc
 0c2a 3e00      ld      a,00h
-0c2c d3bb      out     (0bbh),a
+0c2c d3bb      out     (0bbh),a				; disable interrupts
 0c2e 3eff      ld      a,0ffh
 0c30 328580    ld      (8085h),a			; set DDR B to all outputs
 0c33 78        ld      a,b
@@ -1634,7 +1651,7 @@
 0c40 3e00      ld      a,00h
 0c42 320080    ld      (8000h),a
 0c45 3e04      ld      a,04h
-0c47 d3bb      out     (0bbh),a
+0c47 d3bb      out     (0bbh),a				; enable only RSTB/ interrupt
 0c49 3e02      ld      a,02h
 0c4b 328a80    ld      (808ah),a			; bit clear port C
 0c4e 328e80    ld      (808eh),a			; bit set port C
@@ -1647,7 +1664,7 @@
 0c5d b1        or      c
 0c5e 20f4      jr      nz,0c54h
 0c60 3e0c      ld      a,0ch
-0c62 d3bb      out     (0bbh),a
+0c62 d3bb      out     (0bbh),a				; enable only interrupts RSTA/ and RSTB/
 0c64 212680    ld      hl,8026h
 0c67 cbae      res     5,(hl)
 0c69 3a0080    ld      a,(8000h)
@@ -2304,10 +2321,10 @@
 1132 4f        ld      c,a
 1133 0642      ld      b,42h
 1135 cdb10c    call    0cb1h				; read hardware port 42h to a (front panel fill select switch)
-1138 eeff      xor     0ffh
-113a e63f      and     3fh
+1138 eeff      xor     0ffh					; invert bits
+113a e63f      and     3fh					; only save actual data (two high bits unused)
 113c b1        or      c
-113d 322480    ld      (8024h),a
+113d 322480    ld      (8024h),a			; 8024 stores what fill selected in bits 0-5.  Bits 6-7 are?
 1140 f1        pop     af
 1141 17        rla     
 1142 17        rla     
@@ -2315,15 +2332,15 @@
 1145 4f        ld      c,a
 1146 0643      ld      b,43h
 1148 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/dn switches)
-114b eeff      xor     0ffh
+114b eeff      xor     0ffh					; flip bits to make active high
 114d 47        ld      b,a
-114e e60f      and     0fh
-1150 cb60      bit     4,b
+114e e60f      and     0fh					; just keep the switch data
+1150 cb60      bit     4,b					; what is bit 4?  not a switch
 1152 2802      jr      z,1156h
 1154 cbef      set     5,a
 1156 b1        or      c
 1157 b2        or      d
-1158 322580    ld      (8025h),a
+1158 322580    ld      (8025h),a			; 8025 seems to be a composite of switch state
 115b 3a2580    ld      a,(8025h)
 115e cb77      bit     6,a
 1160 2004      jr      nz,1166h
@@ -2462,9 +2479,9 @@
 1285 cd9c0f    call    0f9ch				;
 1288 212380    ld      hl,8023h
 128b cbbe      res     7,(hl)
-128d 212480    ld      hl,8024h
+128d 212480    ld      hl,8024h				; 8024 contains what fill selected (in bits 0-5)
 1290 cb76      bit     6,(hl)
-1292 2807      jr      z,129bh
+1292 2807      jr      z,129bh				; bit 6 is?
 1294 cbb6      res     6,(hl)
 1296 212580    ld      hl,8025h
 1299 cbfe      set     7,(hl)
@@ -2483,19 +2500,19 @@
 12b9 cd9408    call    0894h				;
 12bc 3a1d80    ld      a,(801dh)
 12bf e61f      and     1fh
-12c1 1100c0    ld      de,0c000h				; c000 battery backed RAM
+12c1 1100c0    ld      de,0c000h			; c000 battery backed RAM
 12c4 1f        rra     
 12c5 3815      jr      c,12dch
-12c7 1103c0    ld      de,0c003h				; c003 battery backed RAM
+12c7 1103c0    ld      de,0c003h			; c003 battery backed RAM
 12ca 1f        rra     
 12cb 380f      jr      c,12dch
-12cd 1106c0    ld      de,0c006h				; c006 battery backed RAM
+12cd 1106c0    ld      de,0c006h			; c006 battery backed RAM
 12d0 1f        rra     
 12d1 3809      jr      c,12dch
-12d3 1109c0    ld      de,0c009h				; c009 battery backed RAM
+12d3 1109c0    ld      de,0c009h			; c009 battery backed RAM
 12d6 1f        rra     
 12d7 3803      jr      c,12dch
-12d9 110cc0    ld      de,0c00ch				; c00c battery backed RAM
+12d9 110cc0    ld      de,0c00ch			; c00c battery backed RAM
 12dc 212080    ld      hl,8020h
 12df 3e03      ld      a,03h
 12e1 cdba08    call    08bah				;
@@ -2612,9 +2629,9 @@
 13bf c9        ret     
 ;*********************************************************************************************
 ; called from 1240, 1f45
-13c0 cdd40c    call    0cd4h				;
-13c3 cdc214    call    14c2h				;
-13c6 cd5f0d    call    0d5fh				;
+13c0 cdd40c    call    0cd4h				; writes to radio section
+13c3 cdc214    call    14c2h				; write 00, 10, 2b, 36, 40, 50, 64, 70 to port b0
+13c6 cd5f0d    call    0d5fh				; MHz writes to radio section
 13c9 cd690a    call    0a69h				;
 13cc cd0001    call    0100h				;
 13cf cda605    call    05a6h				;
@@ -2731,6 +2748,7 @@
 14c1 c9        ret     
 ;*************************************************************************************
 ; called from 13c3
+; write 00, 10, 2b, 36, 40, 50, 64, 70 to port b0
 14c2 06b0      ld      b,0b0h				
 14c4 3e00      ld      a,00h
 14c6 cd5415    call    1554h				; write 00h to I/O addr b0h
@@ -2921,8 +2939,10 @@
 ;**********************************************************************************
 15d2 c35f18    jp      185fh				; power-up to here
 ;**********************************************************************************
-15d5 00        nop     						; jump table?  Or series to be done?
-15d6 cdb91d    call    1db9h				;
+; This seems to be all the advanced POST and diagnostic routines that run before the radio starts
+;
+15d5 00        nop     						;
+15d6 cdb91d    call    1db9h				; This routine checks if the kHz down switch is activated and if so runs the front panel test
 15d9 cdeb1a    call    1aebh				;
 15dc cdf717    call    17f7h				;
 15df cd4f17    call    174fh				; write out 04h a0h to ports A and B
@@ -2933,7 +2953,7 @@
 15ee cd151f    call    1f15h				; possible 1 04 error message
 15f1 cdb221    call    21b2h				; possible 2 series error messages
 15f4 cdac22    call    22ach				;
-15f7 c39e16    jp      169eh				; display 88888
+15f7 c39e16    jp      169eh				; display 88888 (then bring up radio?)
 
 ;******************************************************************************
 ; from 1ae8, 1bb5, 1d9f, 20df, 20ed, 2100, 2121, 213b, 229f
@@ -2976,9 +2996,9 @@
 1644 c9        ret    
 1645 0605      ld      b,05h
 1647 3e0a      ld      a,0ah
-1649 cd2d15    call    152dh				; display blank pos 1
+1649 cd2d15    call    152dh				; blank the display
 164c 10fb      djnz    1649h
-164e d5        push    de
+164e d5        push    de					; MHz down pressed
 164f 7a        ld      a,d
 1650 e607      and     07h
 1652 0601      ld      b,01h
@@ -3044,7 +3064,7 @@
 
 16d4           db      028h, 028h, 028h, 028h, 028h			;88888	lamp test?
 
-16d9 e1        pop     hl					; from 1640
+16d9 e1        pop     hl					; from 1640, MHz up pressed
 16da e1        pop     hl
 16db cdf001    call    01f0h				;; blank display
 16de c38300    jp      0083h				;
@@ -3071,7 +3091,7 @@
 16f7 3e02      ld      a,02h
 16f9 cdd507    call    07d5h				; delay 180h * a periods
 16fc 3e04      ld      a,04h
-16fe d3bb      out     (0bbh),a				; write 04h to device 0bbh
+16fe d3bb      out     (0bbh),a				; enable only RSTB/ interrupt
 1700 3e02      ld      a,02h
 1702 328a80    ld      (808ah),a			; bit clear 02h port C
 1705 328e80    ld      (808eh),a			; bit set 02h port C
@@ -3083,7 +3103,7 @@
 1712 7a        ld      a,d
 1713 328180    ld      (8081h),a			; write to port B
 1716 3e80      ld      a,80h
-1718 d3bb      out     (0bbh),a				; write 80h to device 0bbh
+1718 d3bb      out     (0bbh),a				; enable only RSTA/ interrupt
 171a 78        ld      a,b
 171b d1        pop     de
 171c c1        pop     bc
@@ -3270,7 +3290,7 @@
 ; Startup, POST part 1, processor register tests
 ;
 185f af        xor     a					; power on entry point
-1860 d3bb      out     (0bbh),a				; write zero to port 0bbh
+1860 d3bb      out     (0bbh),a				; disable interrupts
 1862 3e55      ld      a,55h				; a= 55h
 1864 fe55      cp      55h					; is a = 55h?
 1866 c2f218    jp      nz,18f2h				; jump if not, basic processor POST fail
@@ -3607,7 +3627,7 @@
 1afa 3e00      ld      a,00h
 1afc 328180    ld      (8081h),a			; write 00h to port B
 1aff 3e08      ld      a,08h
-1b01 d3bb      out     (0bbh),a
+1b01 d3bb      out     (0bbh),a				; enable only RSTA/ interrupt
 1b03 fd21201b  ld      iy,1b20h
 1b07 fb        ei      
 1b08 00        nop     
@@ -3617,7 +3637,7 @@
 1b12 3e00      ld      a,00h
 1b14 329880    ld      (8098h),a			; set timer 0 mode
 1b17 0610      ld      b,10h
-1b19 10fe      djnz    1b19h
+1b19 10fe      djnz    1b19h				; delay
 1b1b 3e02      ld      a,02h
 1b1d c3391b    jp      1b39h
 1b20 e1        pop     hl
@@ -3634,20 +3654,20 @@
 1b39 f3        di      
 1b3a 5f        ld      e,a
 1b3b 3e00      ld      a,00h
-1b3d d3bb      out     (0bbh),a
+1b3d d3bb      out     (0bbh),a				; disable interrupts
 1b3f 7b        ld      a,e
 1b40 cdb21b    call    1bb2h				; display 1 06 message
 1b43 c34b1b    jp      1b4bh
 1b46 f3        di      
 1b47 3e00      ld      a,00h
-1b49 d3bb      out     (0bbh),a
+1b49 d3bb      out     (0bbh),a				; disable interrupts
 1b4b 3eff      ld      a,0ffh
 1b4d 328680    ld      (8086h),a			; set DDR C port direction
 1b50 328280    ld      (8082h),a			; write ffh to port C
 1b53 0613      ld      b,13h
 1b55 cdb10c    call    0cb1h				; read hardware port 13h to a 
 1b58 3e04      ld      a,04h
-1b5a d3bb      out     (0bbh),a
+1b5a d3bb      out     (0bbh),a				; enable only RSTB/ interrupt
 1b5c dd21771b  ld      ix,1b77h
 1b60 fb        ei      
 1b61 00        nop     
@@ -3676,14 +3696,14 @@
 1b96 f3        di      
 1b97 5f        ld      e,a
 1b98 3e00      ld      a,00h
-1b9a d3bb      out     (0bbh),a
+1b9a d3bb      out     (0bbh),a				; disable interrupts
 1b9c 0613      ld      b,13h
 1b9e cdb10c    call    0cb1h				; read hardware port 13h to a 
 1ba1 7b        ld      a,e
 1ba2 cdb21b    call    1bb2h				; display 1 06 message
 1ba5 f3        di      
 1ba6 3e00      ld      a,00h
-1ba8 d3bb      out     (0bbh),a
+1ba8 d3bb      out     (0bbh),a				; disable interrupts
 1baa c3b81b    jp      1bb8h
 
 1bad           db	   021h, 02ah, 020h, 026h, 02ah			; 1 06
@@ -3695,7 +3715,7 @@
 ;********************************************************************************************
 ; called from 15e2 table
 1bb9 3e04      ld      a,04h				
-1bbb d3bb      out     (0bbh),a
+1bbb d3bb      out     (0bbh),a				; enable only RSTB/ interrupt
 1bbd dd211f17  ld      ix,171fh
 1bc1 3eff      ld      a,0ffh
 1bc3 328580    ld      (8085h),a			; set port B as output
@@ -3741,7 +3761,7 @@
 ;***********************************************************************************************
 ; called from 15e5 table
 1c13 3e04      ld      a,04h				
-1c15 d3bb      out     (0bbh),a
+1c15 d3bb      out     (0bbh),a				; enable only RSTB/ interrupt
 1c17 dd211f17  ld      ix,171fh
 1c1b 3eff      ld      a,0ffh
 1c1d 328580    ld      (8085h),a			; set DDR B to all outputs
@@ -3803,7 +3823,7 @@
 ;***************************************************************************************************
 ; called from 15e8 table
 1c92 af        xor     a					
-1c93 d3bb      out     (0bbh),a
+1c93 d3bb      out     (0bbh),a				; disable interrupts
 1c95 3e14      ld      a,14h
 1c97 0680      ld      b,80h
 1c99 cd5415    call    1554h				; write 14h to I/O addr 80h 
@@ -3852,7 +3872,7 @@
 1cfa 0612      ld      b,12h
 1cfc cdb10c    call    0cb1h				; read hardware port 12h to a 
 1cff cb47      bit     0,a
-1d01 c8        ret     z
+1d01 c8        ret     z					; change to unconditional return to bypass failing hardware test
 1d02 25        dec     h
 1d03 7c        ld      a,h
 1d04 b7        or      a
@@ -3867,7 +3887,7 @@
 1d18 0612      ld      b,12h
 1d1a cdb10c    call    0cb1h				; read hardware port 12h to a 
 1d1d cb47      bit     0,a
-1d1f c22d1d    jp      nz,1d2dh
+1d1f c22d1d    jp      nz,1d2dh				; change to unconditional jump to bypass failing hardware test
 1d22 2b        dec     hl
 1d23 7c        ld      a,h
 1d24 b5        or      l
@@ -3887,7 +3907,7 @@
 1d45 0612      ld      b,12h
 1d47 cdb10c    call    0cb1h				; read hardware port 12h to a 
 1d4a cb47      bit     0,a
-1d4c c2541d    jp      nz,1d54h
+1d4c c2541d    jp      nz,1d54h				; change to unconditional jump to bypass failing hardware test
 1d4f 3e04      ld      a,04h
 1d51 c3a21d    jp      1da2h				; display 1 07 message
 1d54 cdcc1c    call    1ccch				;
@@ -3903,7 +3923,7 @@
 1d6d 0612      ld      b,12h
 1d6f cdb10c    call    0cb1h				; read hardware port 12h to a 
 1d72 cb47      bit     0,a
-1d74 c2a51d    jp      nz,1da5h
+1d74 c2a51d    jp      nz,1da5h				; change to unconditional jump to bypass failing hardware test
 1d77 2b        dec     hl
 1d78 7c        ld      a,h
 1d79 b5        or      l
@@ -3940,7 +3960,10 @@
 1db8 c9        ret     
 
 ;*******************************************************************************
-; called from 15d6 table; is this the first routine run after POST?
+; called from 15d6 table; this is the first routine run after POST
+;
+; This routine checks if the kHz down switch is activated, and if so, runs the front panel test
+;
 1db9 3e00      ld      a,00h				
 1dbb 328780    ld      (8087h),a			; set port mode definition to standard I/O
 1dbe 328480    ld      (8084h),a			; set DDR A to all inputs
@@ -3953,8 +3976,8 @@
 1dd1 0643      ld      b,43h
 1dd3 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/dn switches)
 1dd6 cb5f      bit     3,a					; bit 3=0 when kHz down switch
-1dd8 c0        ret     nz					; return if bit 3 true
-1dd9 210000    ld      hl,0000h
+1dd8 c0        ret     nz					; return if bit 3 true (front panel test not requested)
+1dd9 210000    ld      hl,0000h				; if kHz Down switch active on power up do front panel test routine
 1ddc 110000    ld      de,0000h
 1ddf 010000    ld      bc,0000h
 1de2 0a        ld      a,(bc)
@@ -3963,7 +3986,7 @@
 1de5 03        inc     bc
 1de6 3e40      ld      a,40h
 1de8 b8        cp      b
-1de9 c2e21d    jp      nz,1de2h
+1de9 c2e21d    jp      nz,1de2h				; is this a checksum routine?
 1dec 7d        ld      a,l
 1ded e607      and     07h
 1def 0601      ld      b,01h
@@ -4002,6 +4025,9 @@
 1e30 c9        ret 
 ;****************************************************************************************
 ; continuation from above
+;
+; Display test, for each display digit, count from 0 to 9
+;
 1e31 00        nop     						
 1e32 cd561e    call    1e56h				; blank display
 1e35 0601      ld      b,01h
@@ -4030,11 +4056,15 @@
 1e5f c9        ret     
 ;**************************************************************************
 ; continuation from above
+;
+; This is the front panel switch test routine which continues until radio is turned off.
+; Each switch is read and decoded to a display digit to test that all switches work properly
+;
 1e60 0642      ld      b,42h				
 1e62 cdb10c    call    0cb1h				; read hardware port 42h to a (front panel fill select switch)
 1e65 0e20      ld      c,20h
-1e67 e63f      and     3fh
-1e69 fe3f      cp      3fh
+1e67 e63f      and     3fh					; bits 0-5 store which fill selected
+1e69 fe3f      cp      3fh					; active low, so = 3F is none selected (in zeroize position of switch)
 1e6b ca7a1e    jp      z,1e7ah
 1e6e 0e21      ld      c,21h
 1e70 cb47      bit     0,a
@@ -4042,9 +4072,9 @@
 1e75 0f        rrca    
 1e76 0c        inc     c
 1e77 c3701e    jp      1e70h
-1e7a 79        ld      a,c
+1e7a 79        ld      a,c					; c = fill number
 1e7b 0601      ld      b,01h
-1e7d cd2d15    call    152dh				; display a pos 5
+1e7d cd2d15    call    152dh				; display a pos 5    display fill number, part of front panel test
 1e80 0641      ld      b,41h
 1e82 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel mode switch)
 1e85 0e20      ld      c,20h
@@ -4064,7 +4094,7 @@
 1ea1 0c        inc     c
 1ea2 79        ld      a,c
 1ea3 0602      ld      b,02h
-1ea5 cd2d15    call    152dh				; display a pos 4
+1ea5 cd2d15    call    152dh				; display a pos 4    Mode switch position to display
 1ea8 0643      ld      b,43h
 1eaa cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/down switches)
 1ead 0e20      ld      c,20h
@@ -4079,7 +4109,7 @@
 1ebf c3b81e    jp      1eb8h
 1ec2 79        ld      a,c
 1ec3 0603      ld      b,03h
-1ec5 cd2d15    call    152dh				; display a pos 3
+1ec5 cd2d15    call    152dh				; display a pos 3   Freq change switch test
 1ec8 0640      ld      b,40h
 1eca cdb10c    call    0cb1h				; read hardware port 40h to a (front panel channel select switch)
 1ecd 0e20      ld      c,20h
@@ -4099,7 +4129,7 @@
 1ee8 0c        inc     c
 1ee9 79        ld      a,c
 1eea 0604      ld      b,04h
-1eec cd2d15    call    152dh				; display a pos 2
+1eec cd2d15    call    152dh				; display a pos 2   Channel switch to display
 1eef 0e20      ld      c,20h
 1ef1 0641      ld      b,41h
 1ef3 cdb10c    call    0cb1h				; read hardware port 41h to a (front panel mode switch)
@@ -4121,12 +4151,12 @@
 ; called from 15ee table
 1f15 217b21    ld      hl,217bh				
 1f18 0650      ld      b,50h
-1f1a 16bb      ld      d,0bbh
+1f1a 16bb      ld      d,0bbh				; interrupt control register
 1f1c 1e99      ld      e,99h
 1f1e 3e04      ld      a,04h
 1f20 cde116    call    16e1h				; write 50h to port B, delay a, return
 1f23 cd2217    call    1722h				;
-1f26 d22f1f    jp      nc,1f2fh
+1f26 d22f1f    jp      nc,1f2fh				; change to unconditional jump to bypass failing hardware test
 1f29 57        ld      d,a
 1f2a 3e05      ld      a,05h
 1f2c cdd720    call    20d7h				; ...display 1 04 message (a=5)
@@ -4191,7 +4221,7 @@
 1fab 3e04      ld      a,04h
 1fad cde116    call    16e1h				; write b to port B, delay a, return
 1fb0 cd2217    call    1722h				;
-1fb3 d2bc1f    jp      nc,1fbch
+1fb3 d2bc1f    jp      nc,1fbch				; change to unconditional jump to bypass failing hardware test
 1fb6 57        ld      d,a
 1fb7 3e01      ld      a,01h
 1fb9 cdf320    call    20f3h				; ..display 1 11 message (a=1)
@@ -4201,7 +4231,7 @@
 1fc3 16ff      ld      d,0ffh
 1fc5 1eb3      ld      e,0b3h
 1fc7 cd2217    call    1722h				;
-1fca d2d31f    jp      nc,1fd3h
+1fca d2d31f    jp      nc,1fd3h				; change to unconditional jump to bypass failing hardware test
 1fcd 57        ld      d,a
 1fce 3e02      ld      a,02h
 1fd0 cdf320    call    20f3h				; ...display 1 11 message (a=2)
@@ -4438,7 +4468,7 @@
 21a5 0643      ld      b,43h
 21a7 cdb10c    call    0cb1h				; read hardware port 43h to a (front panel freq up/down switches)
 21aa cb57      bit     2,a
-21ac c29721    jp      nz,2197h
+21ac c29721    jp      nz,2197h				; loop if kHz up switch
 21af d1        pop     de
 21b0 f1        pop     af
 21b1 c9        ret   
